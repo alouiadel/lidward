@@ -11,7 +11,7 @@
 	<key>CFBundleIconFile</key>
 	<string>AppIcon</string>
 	<key>CFBundleIdentifier</key>
-	<string>dev.alouiadel.lidward</string>
+	<string>app.lidward</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
@@ -33,7 +33,7 @@
 	<key>NSHighResolutionCapable</key>
 	<true/>
 	<key>NSHumanReadableCopyright</key>
-	<string>Copyright © 2026 Adel Aloui. MIT licensed.</string>
+	<string>MIT licensed.</string>
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
 </dict>

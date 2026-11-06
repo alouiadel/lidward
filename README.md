@@ -16,6 +16,10 @@
   <img alt="License" src="https://img.shields.io/badge/license-MIT-22C55E">
 </p>
 
+<p align="center">
+  <a href="https://github.com/alouiadel/lidward/releases/latest"><strong>Download the latest release</strong></a>
+</p>
+
 ---
 
 **Lidward** is a small macOS menu-bar app that keeps your Mac awake for as long as you need. It is deliberately focused: only the controls that matter, no triggers, no schedules, no subscriptions, and no App Store sandbox.
@@ -73,24 +77,38 @@ Closed-display mode usually needs a separate helper or a manually installed scri
 - [x] Hide in Dock preference
 - [x] Preferences window
 - [x] Launch at login
+- [x] Install/uninstall build flags
+- [x] Sanitized GitHub Releases
 
 ## Build
 
 Requirements: macOS 13+ and a Swift 5.9+ toolchain (Xcode or the Command Line Tools).
 
 ```bash
-./scripts/build-app.sh
+./scripts/build-app.sh                 # build and open dist/Lidward.app
+./scripts/build-app.sh --install       # build and install to /Applications
+./scripts/build-app.sh --uninstall     # remove /Applications/Lidward.app
+./scripts/build-app.sh --package       # sanitized ZIP + SHA256 in dist/
+./scripts/build-app.sh --release       # package and publish to GitHub Releases
 ```
 
-The script builds the release binary, assembles `dist/Lidward.app`, ad-hoc signs it, and opens it. To build without launching:
-
-```bash
-./scripts/build-app.sh --no-open
-```
+Add `--no-open` when you do not want the app launched after building or installing.
 
 The app icon is generated from `assets/logo.svg` with `scripts/make-icon.sh` and bundled as `AppIcon.icns`; the build script regenerates it if it is missing.
 
-The app is ad-hoc signed for local use. The menu-bar shell, the indefinite session, the display/lock controls, the integrated closed-display helper, and the preferences/startup polish are in place. Next is release packaging.
+## Release packaging
+
+Release builds are sanitized before they are zipped:
+
+- built with `-gnone` so debug paths are not embedded
+- stripped of debug and local symbols
+- toolchain-only rpaths removed
+- extended attributes and `.DS_Store` files cleared
+- the build fails if the bundle contains `/Users/`, `/home/`, `adelaloui`, or `Adel Aloui`
+- zipped with `ditto --norsrc --noextattr --noacl`
+- the `.sha256` file contains only the asset filename, not the local path
+
+The app is ad-hoc signed, not notarized. On first launch, right-click → **Open**, or allow it in **System Settings → Privacy & Security**.
 
 ## License
 
