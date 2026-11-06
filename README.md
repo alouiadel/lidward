@@ -49,11 +49,12 @@ Most keep-awake apps carry years of features you never touch. Lidward keeps the 
 Closed-display mode usually needs a separate helper or a manually installed script. Lidward ships its own privileged helper:
 
 - The first time you enable it, macOS asks for your administrator password **once**. Lidward installs a root-owned helper and a sudoers rule that allows only two commands: `pmset -a disablesleep 0` and `pmset -a disablesleep 1`.
+- The helper is the executable that performs the toggle. The sudoers rule is the permission that lets that one helper run as root without a password each time. They are two pieces because the app itself must not run as root.
 - After that, toggling closed-display mode does not ask for a password.
 - The helper watches Lidward through a pipe. If Lidward quits or crashes, the pipe closes and the helper restores the previous sleep setting.
 - It re-applies the setting if macOS resets it after a power-source change.
 - No script to download, no sudoers file to edit by hand, no kernel extension, no SIP changes.
-- **Remove Closed-Display Helper…** in the menu removes the helper and the rule.
+- **Remove Closed-Display Helper…** appears in the menu only when the helper is installed, and removes both pieces.
 
 > [!WARNING]
 > Keeping a MacBook awake with the lid closed can cause heat and battery drain. Use it on a hard, ventilated surface — never in a bag. Lidward restores normal sleep when it can, but macOS can still force sleep at critical battery.
@@ -61,6 +62,7 @@ Closed-display mode usually needs a separate helper or a manually installed scri
 ## Roadmap
 
 - [x] Name, logo, license, README
+- [x] App icon
 - [x] Swift package + menu-bar shell
 - [x] Indefinite session with power assertions
 - [x] Display sleep and lock-screen controls
@@ -81,6 +83,8 @@ The script builds the release binary, assembles `dist/Lidward.app`, ad-hoc signs
 ```bash
 ./scripts/build-app.sh --no-open
 ```
+
+The app icon is generated from `assets/logo.svg` with `scripts/make-icon.sh` and bundled as `AppIcon.icns`; the build script regenerates it if it is missing.
 
 The app is ad-hoc signed for local use. The menu-bar shell, the indefinite session, the display/lock controls, and the integrated closed-display helper are in place; menu-bar status and preferences are next.
 

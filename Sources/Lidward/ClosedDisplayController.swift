@@ -75,6 +75,7 @@ final class ClosedDisplayController {
         stop()
         try installer.uninstall()
         settings.closedDisplayModeEnabled = false
+        NotificationCenter.default.post(name: .lidwardHelperStatusDidChange, object: self)
     }
 
     private func update() {
@@ -105,6 +106,7 @@ final class ClosedDisplayController {
             return
         }
 
+        NotificationCenter.default.post(name: .lidwardHelperStatusDidChange, object: self)
         startHelper()
     }
 

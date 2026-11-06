@@ -12,6 +12,7 @@ final class StatusItemController: NSObject {
     private let allowDisplaySleepWhenLockedItem = NSMenuItem(title: "Allow Display Sleep When Locked", action: nil, keyEquivalent: "")
     private let lockScreenOnLidCloseItem = NSMenuItem(title: "Lock Screen When Lid Closes", action: nil, keyEquivalent: "")
     private let closedDisplayModeItem = NSMenuItem(title: "Keep Awake With Lid Closed", action: nil, keyEquivalent: "")
+    private let helperSeparatorItem = NSMenuItem.separator()
     private let uninstallHelperItem = NSMenuItem(title: "Remove Closed-Display Helper…", action: nil, keyEquivalent: "")
     private let inactivitySubmenu = NSMenu(title: "Lock Screen After Inactivity")
 
@@ -99,6 +100,8 @@ final class StatusItemController: NSObject {
         closedDisplayModeItem.action = #selector(toggleClosedDisplayMode)
         controlsMenu.addItem(closedDisplayModeItem)
 
+        controlsMenu.addItem(helperSeparatorItem)
+
         uninstallHelperItem.target = self
         uninstallHelperItem.action = #selector(uninstallHelper)
         controlsMenu.addItem(uninstallHelperItem)
@@ -137,6 +140,14 @@ final class StatusItemController: NSObject {
         ) { [weak self] _ in
             self?.refreshMenu()
         })
+
+        observers.append(center.addObserver(
+            forName: .lidwardHelperStatusDidChange,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            self?.refreshMenu()
+        })
     }
 
     private func refreshMenu() {
@@ -162,7 +173,10 @@ final class StatusItemController: NSObject {
         lockScreenOnLidCloseItem.state = settings.lockScreenOnLidClose ? .on : .off
         closedDisplayModeItem.state = settings.closedDisplayModeEnabled ? .on : .off
         closedDisplayModeItem.isEnabled = LidMonitor.supportsClamshell
-        uninstallHelperItem.isEnabled = closedDisplayController?.isHelperInstalled ?? false
+
+        let showHelperRemoval = closedDisplayController?.isHelperInstalled ?? false
+        helperSeparatorItem.isHidden = !showHelperRemoval
+        uninstallHelperItem.isHidden = !showHelperRemoval
 
         for item in inactivitySubmenu.items {
             item.state = item.tag == settings.lockScreenAfterInactivity ? .on : .off
