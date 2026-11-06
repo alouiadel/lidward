@@ -1,0 +1,87 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" role="img" aria-label="Lidward logo">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#070B14"/>
+      <stop offset="0.55" stop-color="#101A2E"/>
+      <stop offset="1" stop-color="#1B2A4A"/>
+    </linearGradient>
+
+    <linearGradient id="metal" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFFFFF"/>
+      <stop offset="0.55" stop-color="#E2E8F0"/>
+      <stop offset="1" stop-color="#A8B6C9"/>
+    </linearGradient>
+
+    <linearGradient id="screen" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0B1220"/>
+      <stop offset="1" stop-color="#111C33"/>
+    </linearGradient>
+
+    <linearGradient id="amber" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FDE68A"/>
+      <stop offset="0.45" stop-color="#FBBF24"/>
+      <stop offset="1" stop-color="#F59E0B"/>
+    </linearGradient>
+
+    <radialGradient id="glow" cx="50%" cy="50%" r="50%">
+      <stop offset="0" stop-color="#F59E0B" stop-opacity="0.38"/>
+      <stop offset="0.55" stop-color="#F59E0B" stop-opacity="0.10"/>
+      <stop offset="1" stop-color="#F59E0B" stop-opacity="0"/>
+    </radialGradient>
+
+    <filter id="blur" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="26"/>
+    </filter>
+    <filter id="softShadow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="18"/>
+    </filter>
+  </defs>
+
+  <!-- App tile -->
+  <rect width="1024" height="1024" rx="224" fill="url(#bg)"/>
+
+  <!-- Ambient glow behind the mark -->
+  <circle cx="512" cy="430" r="360" fill="url(#glow)"/>
+
+  <!-- Subtle shield: the "ward" in Lidward -->
+  <path d="M512 108 L816 218 V482 C816 654 694 794 512 886 C330 794 208 654 208 482 V218 Z"
+        fill="#FFFFFF" fill-opacity="0.025"
+        stroke="#93C5FD" stroke-opacity="0.10" stroke-width="8"/>
+
+  <!-- Shadow under the laptop -->
+  <ellipse cx="512" cy="764" rx="300" ry="26" fill="#000000" opacity="0.45" filter="url(#softShadow)"/>
+
+  <!-- Laptop base -->
+  <rect x="164" y="642" width="696" height="76" rx="38" fill="url(#metal)"/>
+  <rect x="164" y="694" width="696" height="24" rx="12" fill="#7C8CA3" opacity="0.45"/>
+  <rect x="452" y="670" width="120" height="11" rx="5.5" fill="#64748B" opacity="0.55"/>
+
+  <!-- Lid / screen body -->
+  <rect x="220" y="192" width="584" height="448" rx="62" fill="url(#metal)"/>
+  <rect x="252" y="224" width="520" height="384" rx="38" fill="url(#screen)"/>
+
+  <!-- Screen bezel highlight -->
+  <rect x="220" y="192" width="584" height="448" rx="62" fill="none" stroke="#FFFFFF" stroke-opacity="0.22" stroke-width="4"/>
+  <rect x="252" y="224" width="520" height="384" rx="38" fill="none" stroke="#FFFFFF" stroke-opacity="0.06" stroke-width="2"/>
+
+  <!-- Camera dot -->
+  <circle cx="512" cy="208" r="6" fill="#0B1220" opacity="0.55"/>
+
+  <!-- Hinge line -->
+  <rect x="296" y="620" width="432" height="14" rx="7" fill="#0B1220" opacity="0.35"/>
+
+  <!-- Awake eye -->
+  <ellipse cx="512" cy="414" rx="236" ry="126" fill="#F59E0B" opacity="0.20" filter="url(#blur)"/>
+  <path d="M512 300 C612 300 696 352 744 414 C696 476 612 528 512 528 C412 528 328 476 280 414 C328 352 412 300 512 300 Z"
+        fill="url(#amber)"/>
+  <circle cx="512" cy="414" r="58" fill="#0B1220"/>
+  <circle cx="533" cy="393" r="14" fill="#FEF3C7" opacity="0.95"/>
+  <circle cx="491" cy="435" r="6" fill="#FEF3C7" opacity="0.45"/>
+
+  <!-- Awake rays -->
+  <g stroke="#FBBF24" stroke-width="8" stroke-linecap="round" opacity="0.55">
+    <path d="M512 260 V238"/>
+    <path d="M410 274 L398 254"/>
+    <path d="M614 274 L626 254"/>
+  </g>
+</svg>
