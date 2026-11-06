@@ -74,8 +74,23 @@ final class StatusItemController: NSObject {
         if session.isActive {
             session.stop()
         } else {
-            session.start()
+            do {
+                try session.start()
+            } catch {
+                presentError(error)
+            }
         }
+    }
+
+    private func presentError(_ error: Error) {
+        let alert = NSAlert()
+        alert.messageText = "Lidward could not start the session"
+        alert.informativeText = error.localizedDescription
+        alert.alertStyle = .warning
+        alert.addButton(withTitle: "OK")
+
+        NSApp.activate(ignoringOtherApps: true)
+        alert.runModal()
     }
 
     @objc private func quit() {

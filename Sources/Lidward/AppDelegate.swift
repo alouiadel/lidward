@@ -11,4 +11,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationWillTerminate(_ notification: Notification) {
         session.stop()
     }
+
+    #if DEBUG
+    func startSessionForTesting() {
+        do {
+            try session.start()
+        } catch {
+            NSLog("Lidward: failed to start test session: \(error.localizedDescription)")
+        }
+    }
+    #endif
 }

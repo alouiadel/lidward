@@ -13,7 +13,10 @@ let package = Package(
     targets: [
         .executableTarget(
             name: "Lidward",
-            path: "Sources/Lidward"
+            path: "Sources/Lidward",
+            linkerSettings: [
+                .linkedFramework("IOKit")
+            ]
         )
     ]
 )

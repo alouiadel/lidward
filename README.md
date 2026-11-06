@@ -32,6 +32,7 @@ Most keep-awake apps carry years of features you never touch. Lidward keeps the 
 
 - Menu-bar icon to start and stop a session
 - **Indefinite** sessions for now (more session types may come later)
+- Holds native macOS power assertions while active
 - Session status/time in the menu bar
 - **Hide in Dock** — menu bar only
 
@@ -58,7 +59,7 @@ Closed-display mode usually needs a separate helper or a manually installed scri
 
 - [x] Name, logo, license, README
 - [x] Swift package + menu-bar shell
-- [ ] Indefinite session with power assertions
+- [x] Indefinite session with power assertions
 - [ ] Display sleep and lock-screen controls
 - [ ] Integrated closed-display helper
 - [ ] Session status in the menu bar
@@ -78,7 +79,7 @@ The script builds the release binary, assembles `dist/Lidward.app`, ad-hoc signs
 ./scripts/build-app.sh --no-open
 ```
 
-The app is ad-hoc signed for local use. This first block contains the menu-bar shell; session controls and the power assertions land next.
+The app is ad-hoc signed for local use. The menu-bar shell and the indefinite session are in place; per-session controls land next.
 
 ## License
 
