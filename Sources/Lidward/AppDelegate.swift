@@ -2,7 +2,13 @@ import AppKit
 
 final class AppDelegate: NSObject, NSApplicationDelegate {
     private let settings = AppSettings()
+    private let helperInstaller = HelperInstaller()
     private lazy var session = SessionController(settings: settings)
+    private lazy var closedDisplayController = ClosedDisplayController(
+        session: session,
+        settings: settings,
+        installer: helperInstaller
+    )
     private let screenLockMonitor = ScreenLockMonitor()
 
     private var statusItemController: StatusItemController?
@@ -10,7 +16,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var lidMonitor: LidMonitor?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
-        statusItemController = StatusItemController(session: session, settings: settings)
+        helperInstaller.restoreIfNeeded()
+
+        statusItemController = StatusItemController(
+            session: session,
+            settings: settings,
+            closedDisplayController: closedDisplayController
+        )
+        closedDisplayController.onError = { [weak self] error in
+            self?.statusItemController?.presentError(error)
+        }
+
         idleLockController = IdleLockController(
             session: session,
             settings: settings,
@@ -31,6 +47,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func applicationWillTerminate(_ notification: Notification) {
+        closedDisplayController.shutdown()
         session.stop()
     }
 

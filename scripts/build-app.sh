@@ -14,9 +14,15 @@ swift build -c "$CONFIGURATION"
 
 BIN_DIR="$(swift build -c "$CONFIGURATION" --show-bin-path)"
 BIN_PATH="$BIN_DIR/$APP_NAME"
+HELPER_PATH="$BIN_DIR/LidwardHelper"
 
 if [[ ! -x "$BIN_PATH" ]]; then
     echo "Build failed: $BIN_PATH not found" >&2
+    exit 1
+fi
+
+if [[ ! -x "$HELPER_PATH" ]]; then
+    echo "Build failed: $HELPER_PATH not found" >&2
     exit 1
 fi
 
@@ -25,9 +31,12 @@ mkdir -p "$APP_BUNDLE/Contents/MacOS"
 mkdir -p "$APP_BUNDLE/Contents/Resources"
 
 cp "$BIN_PATH" "$APP_BUNDLE/Contents/MacOS/$APP_NAME"
+cp "$HELPER_PATH" "$APP_BUNDLE/Contents/MacOS/LidwardHelper"
 cp "$ROOT/Info.plist" "$APP_BUNDLE/Contents/Info.plist"
 chmod +x "$APP_BUNDLE/Contents/MacOS/$APP_NAME"
+chmod +x "$APP_BUNDLE/Contents/MacOS/LidwardHelper"
 
+codesign --force --sign - --timestamp=none "$APP_BUNDLE/Contents/MacOS/LidwardHelper" >/dev/null
 codesign --force --sign - --timestamp=none "$APP_BUNDLE" >/dev/null
 
 echo "Built $APP_BUNDLE"

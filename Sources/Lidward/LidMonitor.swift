@@ -40,6 +40,27 @@ final class LidMonitor {
         ScreenLocker.lock()
     }
 
+    static var supportsClamshell: Bool {
+        let service = IOServiceGetMatchingService(
+            kIOMainPortDefault,
+            IOServiceMatching("IOPMrootDomain")
+        )
+        guard service != 0 else { return false }
+        defer { IOObjectRelease(service) }
+
+        guard let value = IORegistryEntryCreateCFProperty(
+            service,
+            "AppleClamshellState" as CFString,
+            kCFAllocatorDefault,
+            0
+        ) else {
+            return false
+        }
+
+        _ = value.takeRetainedValue()
+        return true
+    }
+
     private static func readClamshellState() -> Bool {
         let service = IOServiceGetMatchingService(
             kIOMainPortDefault,

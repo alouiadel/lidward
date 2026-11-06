@@ -3,6 +3,7 @@ import AppKit
 final class StatusItemController: NSObject {
     private let session: SessionController
     private let settings: AppSettings
+    private let closedDisplayController: ClosedDisplayController?
     private let statusItem: NSStatusItem
 
     private let sessionMenuItem = NSMenuItem(title: "", action: nil, keyEquivalent: "")
@@ -10,13 +11,20 @@ final class StatusItemController: NSObject {
     private let preventDisplaySleepItem = NSMenuItem(title: "Prevent Display Sleep", action: nil, keyEquivalent: "")
     private let allowDisplaySleepWhenLockedItem = NSMenuItem(title: "Allow Display Sleep When Locked", action: nil, keyEquivalent: "")
     private let lockScreenOnLidCloseItem = NSMenuItem(title: "Lock Screen When Lid Closes", action: nil, keyEquivalent: "")
+    private let closedDisplayModeItem = NSMenuItem(title: "Keep Awake With Lid Closed", action: nil, keyEquivalent: "")
+    private let uninstallHelperItem = NSMenuItem(title: "Remove Closed-Display Helper…", action: nil, keyEquivalent: "")
     private let inactivitySubmenu = NSMenu(title: "Lock Screen After Inactivity")
 
     private var observers: [NSObjectProtocol] = []
 
-    init(session: SessionController, settings: AppSettings) {
+    init(
+        session: SessionController,
+        settings: AppSettings,
+        closedDisplayController: ClosedDisplayController? = nil
+    ) {
         self.session = session
         self.settings = settings
+        self.closedDisplayController = closedDisplayController
         self.statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
 
         super.init()
@@ -85,6 +93,16 @@ final class StatusItemController: NSObject {
         lockScreenOnLidCloseItem.action = #selector(toggleLockOnLidClose)
         controlsMenu.addItem(lockScreenOnLidCloseItem)
 
+        controlsMenu.addItem(.separator())
+
+        closedDisplayModeItem.target = self
+        closedDisplayModeItem.action = #selector(toggleClosedDisplayMode)
+        controlsMenu.addItem(closedDisplayModeItem)
+
+        uninstallHelperItem.target = self
+        uninstallHelperItem.action = #selector(uninstallHelper)
+        controlsMenu.addItem(uninstallHelperItem)
+
         controlsItem.submenu = controlsMenu
         menu.addItem(controlsItem)
 
@@ -142,6 +160,9 @@ final class StatusItemController: NSObject {
         allowDisplaySleepWhenLockedItem.state = settings.allowDisplaySleepWhenLocked ? .on : .off
         allowDisplaySleepWhenLockedItem.isEnabled = !settings.displaySleepAllowed
         lockScreenOnLidCloseItem.state = settings.lockScreenOnLidClose ? .on : .off
+        closedDisplayModeItem.state = settings.closedDisplayModeEnabled ? .on : .off
+        closedDisplayModeItem.isEnabled = LidMonitor.supportsClamshell
+        uninstallHelperItem.isEnabled = closedDisplayController?.isHelperInstalled ?? false
 
         for item in inactivitySubmenu.items {
             item.state = item.tag == settings.lockScreenAfterInactivity ? .on : .off
@@ -183,11 +204,23 @@ final class StatusItemController: NSObject {
         settings.lockScreenOnLidClose.toggle()
     }
 
+    @objc private func toggleClosedDisplayMode() {
+        settings.closedDisplayModeEnabled.toggle()
+    }
+
+    @objc private func uninstallHelper() {
+        do {
+            try closedDisplayController?.uninstallHelper()
+        } catch {
+            presentError(error)
+        }
+    }
+
     @objc private func setInactivityLock(_ sender: NSMenuItem) {
         settings.lockScreenAfterInactivity = sender.tag
     }
 
-    private func presentError(_ error: Error) {
+    func presentError(_ error: Error) {
         let alert = NSAlert()
         alert.messageText = "Lidward could not update the session"
         alert.informativeText = error.localizedDescription

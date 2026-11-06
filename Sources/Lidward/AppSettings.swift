@@ -6,6 +6,7 @@ final class AppSettings {
         static let allowDisplaySleepWhenLocked = "allowDisplaySleepWhenLocked"
         static let lockScreenAfterInactivity = "lockScreenAfterInactivity"
         static let lockScreenOnLidClose = "lockScreenOnLidClose"
+        static let closedDisplayModeEnabled = "closedDisplayModeEnabled"
     }
 
     private let defaults: UserDefaults
@@ -38,12 +39,20 @@ final class AppSettings {
         }
     }
 
+    /// Keep the system awake when the MacBook lid is closed.
+    var closedDisplayModeEnabled: Bool {
+        didSet {
+            persist(closedDisplayModeEnabled, oldValue: oldValue, key: Keys.closedDisplayModeEnabled)
+        }
+    }
+
     init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
         self.displaySleepAllowed = defaults.bool(forKey: Keys.displaySleepAllowed)
         self.allowDisplaySleepWhenLocked = defaults.bool(forKey: Keys.allowDisplaySleepWhenLocked)
         self.lockScreenAfterInactivity = max(0, defaults.integer(forKey: Keys.lockScreenAfterInactivity))
         self.lockScreenOnLidClose = defaults.bool(forKey: Keys.lockScreenOnLidClose)
+        self.closedDisplayModeEnabled = defaults.bool(forKey: Keys.closedDisplayModeEnabled)
     }
 
     private func persist<T: Equatable>(_ value: T, oldValue: T, key: String) {

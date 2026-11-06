@@ -8,7 +8,8 @@ let package = Package(
         .macOS(.v13)
     ],
     products: [
-        .executable(name: "Lidward", targets: ["Lidward"])
+        .executable(name: "Lidward", targets: ["Lidward"]),
+        .executable(name: "LidwardHelper", targets: ["LidwardHelper"])
     ],
     targets: [
         .executableTarget(
@@ -17,6 +18,10 @@ let package = Package(
             linkerSettings: [
                 .linkedFramework("IOKit")
             ]
+        ),
+        .executableTarget(
+            name: "LidwardHelper",
+            path: "Sources/LidwardHelper"
         )
     ]
 )

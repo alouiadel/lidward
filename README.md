@@ -48,10 +48,12 @@ Most keep-awake apps carry years of features you never touch. Lidward keeps the 
 
 Closed-display mode usually needs a separate helper or a manually installed script. Lidward ships its own privileged helper:
 
-- Installed and registered by the app, not by a script you download
-- Only toggles `pmset -a disablesleep 0|1`
-- Restores normal sleep when the session ends, when the app quits, and on the next launch if the app crashed
-- No sudoers file to edit by hand, no kernel extension, no SIP changes
+- The first time you enable it, macOS asks for your administrator password **once**. Lidward installs a root-owned helper and a sudoers rule that allows only two commands: `pmset -a disablesleep 0` and `pmset -a disablesleep 1`.
+- After that, toggling closed-display mode does not ask for a password.
+- The helper watches Lidward through a pipe. If Lidward quits or crashes, the pipe closes and the helper restores the previous sleep setting.
+- It re-applies the setting if macOS resets it after a power-source change.
+- No script to download, no sudoers file to edit by hand, no kernel extension, no SIP changes.
+- **Remove Closed-Display Helper…** in the menu removes the helper and the rule.
 
 > [!WARNING]
 > Keeping a MacBook awake with the lid closed can cause heat and battery drain. Use it on a hard, ventilated surface — never in a bag. Lidward restores normal sleep when it can, but macOS can still force sleep at critical battery.
@@ -62,7 +64,7 @@ Closed-display mode usually needs a separate helper or a manually installed scri
 - [x] Swift package + menu-bar shell
 - [x] Indefinite session with power assertions
 - [x] Display sleep and lock-screen controls
-- [ ] Integrated closed-display helper
+- [x] Integrated closed-display helper
 - [ ] Session status in the menu bar
 - [ ] Hide in Dock + preferences polish
 
@@ -80,7 +82,7 @@ The script builds the release binary, assembles `dist/Lidward.app`, ad-hoc signs
 ./scripts/build-app.sh --no-open
 ```
 
-The app is ad-hoc signed for local use. The menu-bar shell, the indefinite session, and the display/lock controls are in place; the closed-display helper is next.
+The app is ad-hoc signed for local use. The menu-bar shell, the indefinite session, the display/lock controls, and the integrated closed-display helper are in place; menu-bar status and preferences are next.
 
 ## License
 
