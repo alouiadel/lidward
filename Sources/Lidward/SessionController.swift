@@ -14,23 +14,37 @@ enum SessionError: LocalizedError {
 
 /// Owns the lifetime of a keep-awake session.
 ///
-/// The session holds two IOPMAssertions: one prevents idle system sleep and
-/// one prevents idle display sleep. Both are released when the session ends,
-/// and macOS releases them automatically if the process exits unexpectedly.
+/// The session holds a system-sleep assertion and, depending on the current
+/// settings, a display-sleep assertion. macOS releases both automatically if
+/// the process exits unexpectedly.
 final class SessionController {
+    private let settings: AppSettings
+
     private(set) var isActive = false
+    private(set) var isScreenLocked = false
 
     private var systemAssertionID: IOPMAssertionID = 0
     private var displayAssertionID: IOPMAssertionID = 0
+    private var settingsObserver: NSObjectProtocol?
 
-    /// Called whenever the session state changes.
-    var onChange: (() -> Void)?
+    var onError: ((Error) -> Void)?
+
+    init(settings: AppSettings) {
+        self.settings = settings
+
+        settingsObserver = NotificationCenter.default.addObserver(
+            forName: .lidwardSettingsDidChange,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            self?.updateDisplayAssertionReportingErrors()
+        }
+    }
 
     func start() throws {
         guard !isActive else { return }
 
         var systemID: IOPMAssertionID = 0
-        var displayID: IOPMAssertionID = 0
 
         let systemResult = IOPMAssertionCreateWithName(
             kIOPMAssertionTypePreventUserIdleSystemSleep as CFString,
@@ -43,22 +57,19 @@ final class SessionController {
             throw SessionError.assertionFailed("system sleep", systemResult)
         }
 
-        let displayResult = IOPMAssertionCreateWithName(
-            kIOPMAssertionTypePreventUserIdleDisplaySleep as CFString,
-            IOPMAssertionLevel(kIOPMAssertionLevelOn),
-            "Lidward is keeping your display awake" as CFString,
-            &displayID
-        )
+        systemAssertionID = systemID
+        isActive = true
 
-        guard displayResult == kIOReturnSuccess else {
-            IOPMAssertionRelease(systemID)
-            throw SessionError.assertionFailed("display sleep", displayResult)
+        do {
+            try updateDisplayAssertion()
+        } catch {
+            IOPMAssertionRelease(systemAssertionID)
+            systemAssertionID = 0
+            isActive = false
+            throw error
         }
 
-        systemAssertionID = systemID
-        displayAssertionID = displayID
-        isActive = true
-        onChange?()
+        notifySessionChanged()
     }
 
     func stop() {
@@ -66,7 +77,50 @@ final class SessionController {
 
         releaseAssertions()
         isActive = false
-        onChange?()
+        notifySessionChanged()
+    }
+
+    func setScreenLocked(_ locked: Bool) {
+        guard isScreenLocked != locked else { return }
+
+        isScreenLocked = locked
+        updateDisplayAssertionReportingErrors()
+    }
+
+    private func updateDisplayAssertion() throws {
+        let shouldPreventDisplaySleep = isActive
+            && !settings.displaySleepAllowed
+            && !(settings.allowDisplaySleepWhenLocked && isScreenLocked)
+
+        if shouldPreventDisplaySleep {
+            guard displayAssertionID == 0 else { return }
+
+            var displayID: IOPMAssertionID = 0
+
+            let result = IOPMAssertionCreateWithName(
+                kIOPMAssertionTypePreventUserIdleDisplaySleep as CFString,
+                IOPMAssertionLevel(kIOPMAssertionLevelOn),
+                "Lidward is keeping your display awake" as CFString,
+                &displayID
+            )
+
+            guard result == kIOReturnSuccess else {
+                throw SessionError.assertionFailed("display sleep", result)
+            }
+
+            displayAssertionID = displayID
+        } else if displayAssertionID != 0 {
+            IOPMAssertionRelease(displayAssertionID)
+            displayAssertionID = 0
+        }
+    }
+
+    private func updateDisplayAssertionReportingErrors() {
+        do {
+            try updateDisplayAssertion()
+        } catch {
+            onError?(error)
+        }
     }
 
     private func releaseAssertions() {
@@ -81,7 +135,15 @@ final class SessionController {
         }
     }
 
+    private func notifySessionChanged() {
+        NotificationCenter.default.post(name: .lidwardSessionDidChange, object: self)
+    }
+
     deinit {
+        if let settingsObserver {
+            NotificationCenter.default.removeObserver(settingsObserver)
+        }
+
         releaseAssertions()
     }
 }

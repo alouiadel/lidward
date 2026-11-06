@@ -42,6 +42,7 @@ Most keep-awake apps carry years of features you never touch. Lidward keeps the 
 - Allow display sleep **when the screen is locked**
 - Allow or prevent **system sleep when the lid is closed** (Closed-Display Mode)
 - **Lock the screen** after inactivity, or immediately after the display is closed
+- Session controls live in the menu bar and persist between launches
 
 ### Closed-Display Mode, integrated
 
@@ -60,7 +61,7 @@ Closed-display mode usually needs a separate helper or a manually installed scri
 - [x] Name, logo, license, README
 - [x] Swift package + menu-bar shell
 - [x] Indefinite session with power assertions
-- [ ] Display sleep and lock-screen controls
+- [x] Display sleep and lock-screen controls
 - [ ] Integrated closed-display helper
 - [ ] Session status in the menu bar
 - [ ] Hide in Dock + preferences polish
@@ -79,7 +80,7 @@ The script builds the release binary, assembles `dist/Lidward.app`, ad-hoc signs
 ./scripts/build-app.sh --no-open
 ```
 
-The app is ad-hoc signed for local use. The menu-bar shell and the indefinite session are in place; per-session controls land next.
+The app is ad-hoc signed for local use. The menu-bar shell, the indefinite session, and the display/lock controls are in place; the closed-display helper is next.
 
 ## License
 

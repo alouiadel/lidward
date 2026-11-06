@@ -7,9 +7,7 @@ app.delegate = delegate
 app.setActivationPolicy(.accessory)
 
 #if DEBUG
-if CommandLine.arguments.contains("--start-session") {
-    delegate.startSessionForTesting()
-}
+delegate.applyDebugArguments()
 #endif
 
 app.run()
