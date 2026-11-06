@@ -11,6 +11,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         installer: helperInstaller
     )
     private let screenLockMonitor = ScreenLockMonitor()
+    private lazy var updateChecker = UpdateChecker(settings: settings)
+    private lazy var uninstaller = UninstallController(
+        helperInstaller: helperInstaller,
+        onWillUninstall: { [weak self] in
+            self?.closedDisplayController.shutdown()
+            self?.session.stop()
+        }
+    )
 
     private var statusItemController: StatusItemController?
     private var idleLockController: IdleLockController?
@@ -26,11 +34,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             session: session,
             settings: settings,
             closedDisplayController: closedDisplayController,
+            updateChecker: updateChecker,
             showPreferences: { [weak self] in self?.showPreferences() }
         )
         closedDisplayController.onError = { [weak self] error in
             self?.statusItemController?.presentError(error)
         }
+
+        updateChecker.start()
 
         idleLockController = IdleLockController(
             session: session,
@@ -80,7 +91,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         if preferencesWindowController == nil {
             preferencesWindowController = PreferencesWindowController(
                 settings: settings,
-                loginItem: loginItemController
+                loginItem: loginItemController,
+                updateChecker: updateChecker,
+                uninstaller: uninstaller
             )
         }
 

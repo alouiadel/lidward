@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <img alt="Status" src="https://img.shields.io/badge/status-v0.2.0-22C55E">
+  <img alt="Status" src="https://img.shields.io/badge/status-v0.3.0-22C55E">
   <img alt="Platform" src="https://img.shields.io/badge/platform-macOS%2013%2B-0B1220">
   <img alt="Language" src="https://img.shields.io/badge/language-Swift%20%2B%20AppKit-F05138">
   <img alt="License" src="https://img.shields.io/badge/license-MIT-22C55E">
@@ -42,7 +42,8 @@ Most keep-awake apps carry years of features you never touch. Lidward keeps the 
 - **Elapsed session time** in the menu bar
 - **Optional Dock icon** — hidden by default
 - **Launch at login** (best when the app is in `/Applications`)
-- Preferences window for menu-bar, Dock, and startup options
+- **In-app purge uninstall** from Preferences
+- Preferences window for menu-bar, Dock, startup, updates, and uninstall options
 
 ### Per-session controls
 
@@ -82,6 +83,17 @@ Closed-display mode usually needs a separate helper or a manually installed scri
 - [x] Install/uninstall build flags
 - [x] Sanitized GitHub Releases
 - [x] Changelog-driven release notes
+- [x] Daily GitHub release check + manual check
+- [x] In-app purge uninstall
+- [ ] Full auto-update (Sparkle) if the app gets users
+
+## Updates
+
+Lidward checks the GitHub Releases API at most once a day for a newer version. When one is available, the menu shows **Download Lidward X…** and Preferences shows a download link.
+
+- Automatic check: once a day; can be disabled in Preferences.
+- Manual check: **Check for Updates…** in the menu, or **Check Now** in Preferences.
+- Lidward does not self-install updates yet. Full auto-update (Sparkle) will be implemented if the app gets users.
 
 ## Build
 

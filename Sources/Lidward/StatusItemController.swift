@@ -4,6 +4,7 @@ final class StatusItemController: NSObject {
     private let session: SessionController
     private let settings: AppSettings
     private let closedDisplayController: ClosedDisplayController?
+    private let updateChecker: UpdateChecker?
     private let showPreferences: (() -> Void)?
     private let statusItem: NSStatusItem
 
@@ -15,6 +16,7 @@ final class StatusItemController: NSObject {
     private let closedDisplayModeItem = NSMenuItem(title: "Keep Awake With Lid Closed", action: nil, keyEquivalent: "")
     private let helperSeparatorItem = NSMenuItem.separator()
     private let uninstallHelperItem = NSMenuItem(title: "Remove Closed-Display Helper…", action: nil, keyEquivalent: "")
+    private let updateMenuItem = NSMenuItem(title: "Check for Updates…", action: nil, keyEquivalent: "")
     private let preferencesItem = NSMenuItem(title: "Preferences…", action: nil, keyEquivalent: ",")
     private let inactivitySubmenu = NSMenu(title: "Lock Screen After Inactivity")
 
@@ -25,11 +27,13 @@ final class StatusItemController: NSObject {
         session: SessionController,
         settings: AppSettings,
         closedDisplayController: ClosedDisplayController? = nil,
+        updateChecker: UpdateChecker? = nil,
         showPreferences: (() -> Void)? = nil
     ) {
         self.session = session
         self.settings = settings
         self.closedDisplayController = closedDisplayController
+        self.updateChecker = updateChecker
         self.showPreferences = showPreferences
         self.statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
 
@@ -117,6 +121,10 @@ final class StatusItemController: NSObject {
 
         menu.addItem(.separator())
 
+        updateMenuItem.target = self
+        updateMenuItem.action = #selector(handleUpdateMenu)
+        menu.addItem(updateMenuItem)
+
         preferencesItem.target = self
         preferencesItem.action = #selector(openPreferences)
         menu.addItem(preferencesItem)
@@ -160,6 +168,14 @@ final class StatusItemController: NSObject {
         ) { [weak self] _ in
             self?.refreshMenu()
         })
+
+        observers.append(center.addObserver(
+            forName: .lidwardUpdateStatusDidChange,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            self?.refreshMenu()
+        })
     }
 
     private func refreshMenu() {
@@ -189,6 +205,30 @@ final class StatusItemController: NSObject {
         let showHelperRemoval = closedDisplayController?.isHelperInstalled ?? false
         helperSeparatorItem.isHidden = !showHelperRemoval
         uninstallHelperItem.isHidden = !showHelperRemoval
+
+        if let updateChecker {
+            updateMenuItem.isHidden = false
+
+            if updateChecker.isChecking {
+                updateMenuItem.title = "Checking for Updates…"
+                updateMenuItem.image = nil
+                updateMenuItem.isEnabled = false
+            } else if let update = updateChecker.availableUpdate {
+                updateMenuItem.title = "Download Lidward \(update.version)…"
+                updateMenuItem.image = NSImage(
+                    systemSymbolName: "arrow.down.circle",
+                    accessibilityDescription: "Update available"
+                )
+                updateMenuItem.image?.isTemplate = true
+                updateMenuItem.isEnabled = true
+            } else {
+                updateMenuItem.title = "Check for Updates…"
+                updateMenuItem.image = nil
+                updateMenuItem.isEnabled = true
+            }
+        } else {
+            updateMenuItem.isHidden = true
+        }
 
         for item in inactivitySubmenu.items {
             item.state = item.tag == settings.lockScreenAfterInactivity ? .on : .off
@@ -293,13 +333,56 @@ final class StatusItemController: NSObject {
 
     func presentError(_ error: Error) {
         let alert = NSAlert()
-        alert.messageText = "Lidward could not update the session"
+        alert.messageText = "Lidward could not complete that action"
         alert.informativeText = error.localizedDescription
         alert.alertStyle = .warning
         alert.addButton(withTitle: "OK")
 
         NSApp.activate(ignoringOtherApps: true)
         alert.runModal()
+    }
+
+    @objc private func handleUpdateMenu() {
+        if let update = updateChecker?.availableUpdate {
+            NSWorkspace.shared.open(update.releaseURL)
+            return
+        }
+
+        checkForUpdates()
+    }
+
+    private func checkForUpdates() {
+        guard let updateChecker else { return }
+
+        updateChecker.check(force: true) { [weak self] error in
+            guard let self else { return }
+
+            if let error {
+                self.presentError(error)
+                return
+            }
+
+            if let update = self.updateChecker?.availableUpdate {
+                let alert = NSAlert()
+                alert.messageText = "Lidward \(update.version) is available"
+                alert.informativeText = "Open the GitHub release page to download it."
+                alert.addButton(withTitle: "Download")
+                alert.addButton(withTitle: "Later")
+
+                NSApp.activate(ignoringOtherApps: true)
+                if alert.runModal() == .alertFirstButtonReturn {
+                    NSWorkspace.shared.open(update.releaseURL)
+                }
+            } else {
+                let alert = NSAlert()
+                alert.messageText = "Lidward is up to date"
+                alert.informativeText = "You are running the latest version."
+                alert.addButton(withTitle: "OK")
+
+                NSApp.activate(ignoringOtherApps: true)
+                alert.runModal()
+            }
+        }
     }
 
     @objc private func openPreferences() {

@@ -1,8 +1,11 @@
+import AppKit
 import SwiftUI
 
 struct PreferencesView: View {
     @ObservedObject var settings: AppSettings
     @ObservedObject var loginItem: LoginItemController
+    @ObservedObject var updateChecker: UpdateChecker
+    let uninstaller: UninstallController
 
     var body: some View {
         Form {
@@ -40,6 +43,55 @@ struct PreferencesView: View {
                 }
             }
 
+            Section("Updates") {
+                Toggle(
+                    "Check for updates automatically (once a day)",
+                    isOn: $settings.automaticallyCheckForUpdates
+                )
+
+                HStack {
+                    Button("Check Now") {
+                        updateChecker.check(force: true)
+                    }
+                    .disabled(updateChecker.isChecking)
+
+                    if updateChecker.isChecking {
+                        ProgressView()
+                            .controlSize(.small)
+                    }
+                }
+
+                if let update = updateChecker.availableUpdate {
+                    HStack {
+                        Text("Lidward \(update.version) is available.")
+                        Spacer()
+                        Button("Download") {
+                            NSWorkspace.shared.open(update.releaseURL)
+                        }
+                    }
+                } else if let lastCheck = settings.lastUpdateCheck {
+                    Text("Last checked \(lastCheck.formatted(date: .abbreviated, time: .shortened))")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+
+                if let error = updateChecker.errorMessage {
+                    Text(error)
+                        .font(.caption)
+                        .foregroundStyle(.red)
+                }
+            }
+
+            Section("Uninstall") {
+                Text("Removes Lidward, its preferences, login item, and closed-display helper.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+
+                Button("Uninstall Lidward…", role: .destructive) {
+                    uninstaller.requestUninstall()
+                }
+            }
+
             Section {
                 HStack {
                     Text("Lidward \(appVersion)")
@@ -50,7 +102,7 @@ struct PreferencesView: View {
             }
         }
         .formStyle(.grouped)
-        .frame(width: 460, height: 340)
+        .frame(width: 460, height: 520)
     }
 
     private var appVersion: String {

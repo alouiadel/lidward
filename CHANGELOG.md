@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.3.0] - 2026-11-07
+
+### Added
+
+- Daily GitHub Releases update check with a menu-bar download flag.
+- Manual "Check for Updates…" and a Preferences "Check Now" button.
+- In-app **Uninstall Lidward…** that purges the app, preferences, login item, closed-display helper, and restores sleep.
+
+### Changed
+
+- Update checks can be disabled in Preferences.
+- Full self-installing auto-update is deferred until the app has users.
+
 ## [0.2.0] - 2026-11-07
 
 ### Added

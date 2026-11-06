@@ -10,6 +10,8 @@ final class AppSettings: ObservableObject {
         static let closedDisplayModeEnabled = "closedDisplayModeEnabled"
         static let showSessionTimeInMenuBar = "showSessionTimeInMenuBar"
         static let hideInDock = "hideInDock"
+        static let automaticallyCheckForUpdates = "automaticallyCheckForUpdates"
+        static let lastUpdateCheck = "lastUpdateCheck"
     }
 
     private let defaults: UserDefaults
@@ -63,6 +65,24 @@ final class AppSettings: ObservableObject {
         }
     }
 
+    /// Check GitHub Releases at most once a day.
+    @Published var automaticallyCheckForUpdates: Bool {
+        didSet {
+            persist(automaticallyCheckForUpdates, oldValue: oldValue, key: Keys.automaticallyCheckForUpdates)
+        }
+    }
+
+    /// Timestamp of the last update check.
+    @Published var lastUpdateCheck: Date? {
+        didSet {
+            if let lastUpdateCheck {
+                defaults.set(lastUpdateCheck, forKey: Keys.lastUpdateCheck)
+            } else {
+                defaults.removeObject(forKey: Keys.lastUpdateCheck)
+            }
+        }
+    }
+
     init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
         self.displaySleepAllowed = defaults.bool(forKey: Keys.displaySleepAllowed)
@@ -72,6 +92,8 @@ final class AppSettings: ObservableObject {
         self.closedDisplayModeEnabled = defaults.bool(forKey: Keys.closedDisplayModeEnabled)
         self.showSessionTimeInMenuBar = defaults.object(forKey: Keys.showSessionTimeInMenuBar) as? Bool ?? true
         self.hideInDock = defaults.object(forKey: Keys.hideInDock) as? Bool ?? true
+        self.automaticallyCheckForUpdates = defaults.object(forKey: Keys.automaticallyCheckForUpdates) as? Bool ?? true
+        self.lastUpdateCheck = defaults.object(forKey: Keys.lastUpdateCheck) as? Date
     }
 
     private func persist<T: Equatable>(_ value: T, oldValue: T, key: String) {

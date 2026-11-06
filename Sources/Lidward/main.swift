@@ -21,6 +21,34 @@ if CommandLine.arguments.contains("--unregister-login-item") {
     }
 }
 
+#if DEBUG
+if CommandLine.arguments.contains("--check-updates") {
+    let settings = AppSettings()
+    let checker = UpdateChecker(settings: settings)
+    let semaphore = DispatchSemaphore(value: 0)
+    var output = "unknown"
+
+    checker.check(force: true) { error in
+        if let error {
+            output = "error: \(error.localizedDescription)"
+        } else if let update = checker.availableUpdate {
+            output = "update available: \(update.version) — \(update.releaseURL.absoluteString)"
+        } else {
+            output = "up to date"
+        }
+
+        semaphore.signal()
+    }
+
+    while semaphore.wait(timeout: .now() + 0.1) == .timedOut {
+        RunLoop.main.run(until: Date().addingTimeInterval(0.1))
+    }
+
+    print(output)
+    exit(0)
+}
+#endif
+
 let app = NSApplication.shared
 let delegate = AppDelegate()
 
