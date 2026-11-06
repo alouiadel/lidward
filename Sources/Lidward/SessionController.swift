@@ -22,6 +22,7 @@ final class SessionController {
 
     private(set) var isActive = false
     private(set) var isScreenLocked = false
+    private(set) var startedAt: Date?
 
     private var systemAssertionID: IOPMAssertionID = 0
     private var displayAssertionID: IOPMAssertionID = 0
@@ -69,6 +70,7 @@ final class SessionController {
             throw error
         }
 
+        startedAt = Date()
         notifySessionChanged()
     }
 
@@ -77,6 +79,7 @@ final class SessionController {
 
         releaseAssertions()
         isActive = false
+        startedAt = nil
         notifySessionChanged()
     }
 

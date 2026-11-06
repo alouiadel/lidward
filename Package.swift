@@ -16,7 +16,9 @@ let package = Package(
             name: "Lidward",
             path: "Sources/Lidward",
             linkerSettings: [
-                .linkedFramework("IOKit")
+                .linkedFramework("IOKit"),
+                .linkedFramework("ServiceManagement"),
+                .linkedFramework("SwiftUI")
             ]
         ),
         .executableTarget(

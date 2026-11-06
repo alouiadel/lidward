@@ -4,6 +4,7 @@ final class StatusItemController: NSObject {
     private let session: SessionController
     private let settings: AppSettings
     private let closedDisplayController: ClosedDisplayController?
+    private let showPreferences: (() -> Void)?
     private let statusItem: NSStatusItem
 
     private let sessionMenuItem = NSMenuItem(title: "", action: nil, keyEquivalent: "")
@@ -14,18 +15,22 @@ final class StatusItemController: NSObject {
     private let closedDisplayModeItem = NSMenuItem(title: "Keep Awake With Lid Closed", action: nil, keyEquivalent: "")
     private let helperSeparatorItem = NSMenuItem.separator()
     private let uninstallHelperItem = NSMenuItem(title: "Remove Closed-Display Helper…", action: nil, keyEquivalent: "")
+    private let preferencesItem = NSMenuItem(title: "Preferences…", action: nil, keyEquivalent: ",")
     private let inactivitySubmenu = NSMenu(title: "Lock Screen After Inactivity")
 
     private var observers: [NSObjectProtocol] = []
+    private var sessionTimer: Timer?
 
     init(
         session: SessionController,
         settings: AppSettings,
-        closedDisplayController: ClosedDisplayController? = nil
+        closedDisplayController: ClosedDisplayController? = nil,
+        showPreferences: (() -> Void)? = nil
     ) {
         self.session = session
         self.settings = settings
         self.closedDisplayController = closedDisplayController
+        self.showPreferences = showPreferences
         self.statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
 
         super.init()
@@ -44,7 +49,8 @@ final class StatusItemController: NSObject {
         guard let button = statusItem.button else { return }
 
         button.toolTip = "Lidward"
-        button.imagePosition = .imageOnly
+        button.imagePosition = .imageLeading
+        button.font = NSFont.monospacedDigitSystemFont(ofSize: 11, weight: .regular)
     }
 
     private func configureMenu() {
@@ -108,6 +114,12 @@ final class StatusItemController: NSObject {
 
         controlsItem.submenu = controlsMenu
         menu.addItem(controlsItem)
+
+        menu.addItem(.separator())
+
+        preferencesItem.target = self
+        preferencesItem.action = #selector(openPreferences)
+        menu.addItem(preferencesItem)
 
         menu.addItem(.separator())
 
@@ -181,6 +193,51 @@ final class StatusItemController: NSObject {
         for item in inactivitySubmenu.items {
             item.state = item.tag == settings.lockScreenAfterInactivity ? .on : .off
         }
+
+        updateSessionTimer()
+    }
+
+    private func updateSessionTimer() {
+        let shouldRun = session.isActive && settings.showSessionTimeInMenuBar
+
+        if shouldRun {
+            updateSessionTitle()
+
+            guard sessionTimer == nil else { return }
+
+            let timer = Timer(timeInterval: 1, repeats: true) { [weak self] _ in
+                self?.updateSessionTitle()
+            }
+            RunLoop.main.add(timer, forMode: .common)
+            sessionTimer = timer
+        } else {
+            sessionTimer?.invalidate()
+            sessionTimer = nil
+            statusItem.button?.title = ""
+        }
+    }
+
+    private func updateSessionTitle() {
+        guard session.isActive,
+              settings.showSessionTimeInMenuBar,
+              let startedAt = session.startedAt else {
+            statusItem.button?.title = ""
+            return
+        }
+
+        let elapsed = max(0, Int(Date().timeIntervalSince(startedAt)))
+        let hours = elapsed / 3600
+        let minutes = (elapsed % 3600) / 60
+        let seconds = elapsed % 60
+
+        let text: String
+        if hours > 0 {
+            text = String(format: "%d:%02d:%02d", hours, minutes, seconds)
+        } else {
+            text = String(format: "%d:%02d", minutes, seconds)
+        }
+
+        statusItem.button?.title = " " + text
     }
 
     private func inactivityTitle(_ minutes: Int) -> String {
@@ -245,12 +302,18 @@ final class StatusItemController: NSObject {
         alert.runModal()
     }
 
+    @objc private func openPreferences() {
+        showPreferences?()
+    }
+
     @objc private func quit() {
         session.stop()
         NSApp.terminate(nil)
     }
 
     deinit {
+        sessionTimer?.invalidate()
+
         for observer in observers {
             NotificationCenter.default.removeObserver(observer)
         }

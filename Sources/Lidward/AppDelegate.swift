@@ -3,6 +3,7 @@ import AppKit
 final class AppDelegate: NSObject, NSApplicationDelegate {
     private let settings = AppSettings()
     private let helperInstaller = HelperInstaller()
+    private let loginItemController = LoginItemController()
     private lazy var session = SessionController(settings: settings)
     private lazy var closedDisplayController = ClosedDisplayController(
         session: session,
@@ -14,14 +15,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var statusItemController: StatusItemController?
     private var idleLockController: IdleLockController?
     private var lidMonitor: LidMonitor?
+    private var preferencesWindowController: PreferencesWindowController?
+    private var settingsObserver: NSObjectProtocol?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         helperInstaller.restoreIfNeeded()
+        applyDockVisibility()
 
         statusItemController = StatusItemController(
             session: session,
             settings: settings,
-            closedDisplayController: closedDisplayController
+            closedDisplayController: closedDisplayController,
+            showPreferences: { [weak self] in self?.showPreferences() }
         )
         closedDisplayController.onError = { [weak self] error in
             self?.statusItemController?.presentError(error)
@@ -44,11 +49,50 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             self?.session.setScreenLocked(locked)
             self?.idleLockController?.screenLockStateDidChange(locked)
         }
+
+        settingsObserver = NotificationCenter.default.addObserver(
+            forName: .lidwardSettingsDidChange,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            self?.applyDockVisibility()
+        }
     }
 
     func applicationWillTerminate(_ notification: Notification) {
         closedDisplayController.shutdown()
         session.stop()
+
+        if let settingsObserver {
+            NotificationCenter.default.removeObserver(settingsObserver)
+        }
+    }
+
+    func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
+        if !flag {
+            showPreferences()
+        }
+
+        return true
+    }
+
+    private func showPreferences() {
+        if preferencesWindowController == nil {
+            preferencesWindowController = PreferencesWindowController(
+                settings: settings,
+                loginItem: loginItemController
+            )
+        }
+
+        preferencesWindowController?.show()
+    }
+
+    private func applyDockVisibility() {
+        let policy: NSApplication.ActivationPolicy = settings.hideInDock ? .accessory : .regular
+
+        if NSApp.activationPolicy() != policy {
+            NSApp.setActivationPolicy(policy)
+        }
     }
 
     #if DEBUG
@@ -60,6 +104,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         if CommandLine.arguments.contains("--start-session") {
             startSessionForTesting()
         }
+
+        if CommandLine.arguments.contains("--show-preferences") {
+            DispatchQueue.main.async { [weak self] in
+                self?.showPreferences()
+            }
+        }
     }
 
     private func startSessionForTesting() {
@@ -70,4 +120,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
     #endif
+
+    deinit {
+        if let settingsObserver {
+            NotificationCenter.default.removeObserver(settingsObserver)
+        }
+    }
 }
