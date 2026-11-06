@@ -57,7 +57,7 @@ Closed-display mode usually needs a separate helper or a manually installed scri
 ## Roadmap
 
 - [x] Name, logo, license, README
-- [ ] Xcode project + menu-bar shell
+- [x] Swift package + menu-bar shell
 - [ ] Indefinite session with power assertions
 - [ ] Display sleep and lock-screen controls
 - [ ] Integrated closed-display helper
@@ -66,7 +66,19 @@ Closed-display mode usually needs a separate helper or a manually installed scri
 
 ## Build
 
-Source and build instructions will be added with the first code commit.
+Requirements: macOS 13+ and a Swift 5.9+ toolchain (Xcode or the Command Line Tools).
+
+```bash
+./scripts/build-app.sh
+```
+
+The script builds the release binary, assembles `dist/Lidward.app`, ad-hoc signs it, and opens it. To build without launching:
+
+```bash
+./scripts/build-app.sh --no-open
+```
+
+The app is ad-hoc signed for local use. This first block contains the menu-bar shell; session controls and the power assertions land next.
 
 ## License
 
