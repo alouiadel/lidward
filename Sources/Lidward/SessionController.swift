@@ -22,7 +22,18 @@ final class SessionController {
 
     private(set) var isActive = false
     private(set) var isScreenLocked = false
-    private(set) var startedAt: Date?
+    private(set) var startedAt: ContinuousClock.Instant?
+
+    /// Monotonic elapsed time for the current session.
+    var elapsedTime: TimeInterval? {
+        guard let startedAt else { return nil }
+
+        let duration = ContinuousClock.now - startedAt
+        let components = duration.components
+
+        return TimeInterval(components.seconds)
+            + TimeInterval(components.attoseconds) / 1_000_000_000_000_000_000
+    }
 
     private var systemAssertionID: IOPMAssertionID = 0
     private var displayAssertionID: IOPMAssertionID = 0
@@ -70,7 +81,7 @@ final class SessionController {
             throw error
         }
 
-        startedAt = Date()
+        startedAt = ContinuousClock.now
         notifySessionChanged()
     }
 

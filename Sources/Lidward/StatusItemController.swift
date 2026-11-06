@@ -220,12 +220,12 @@ final class StatusItemController: NSObject {
     private func updateSessionTitle() {
         guard session.isActive,
               settings.showSessionTimeInMenuBar,
-              let startedAt = session.startedAt else {
+              let elapsedTime = session.elapsedTime else {
             statusItem.button?.title = ""
             return
         }
 
-        let elapsed = max(0, Int(Date().timeIntervalSince(startedAt)))
+        let elapsed = max(0, Int(elapsedTime))
         let hours = elapsed / 3600
         let minutes = (elapsed % 3600) / 60
         let seconds = elapsed % 60

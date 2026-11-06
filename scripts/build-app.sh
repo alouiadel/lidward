@@ -16,6 +16,7 @@ CHECKSUM="$ASSET.sha256"
 
 DO_INSTALL=0
 DO_UNINSTALL=0
+DO_PURGE=0
 DO_PACKAGE=0
 DO_RELEASE=0
 OPEN_APP=1
@@ -27,6 +28,7 @@ Usage: ./scripts/build-app.sh [options]
 Options:
   --install     Build and install to $INSTALL_DIR/$APP_NAME.app
   --uninstall   Remove $INSTALL_DIR/$APP_NAME.app (and optionally the helper)
+  --purge       Uninstall and remove preferences, login item, and helper
   --package     Build a sanitized ZIP and checksum without publishing
   --release     Build a sanitized ZIP and publish it to GitHub Releases
   --no-open     Do not launch the app after building/installing
@@ -38,6 +40,7 @@ while [[ $# -gt 0 ]]; do
     case "$1" in
         --install) DO_INSTALL=1 ;;
         --uninstall) DO_UNINSTALL=1 ;;
+        --purge) DO_UNINSTALL=1; DO_PURGE=1 ;;
         --package) DO_PACKAGE=1 ;;
         --release) DO_RELEASE=1 ;;
         --no-open) OPEN_APP=0 ;;
@@ -214,6 +217,10 @@ uninstall_app() {
 
     echo "Uninstalling $APP_NAME..."
 
+    if [[ $DO_PURGE -eq 1 && "$INSTALL_DIR" == "/Applications" && -x "$target/Contents/MacOS/$APP_NAME" ]]; then
+        "$target/Contents/MacOS/$APP_NAME" --unregister-login-item || true
+    fi
+
     pkill -x "$APP_NAME" 2>/dev/null || true
     sleep 1
 
@@ -224,12 +231,31 @@ uninstall_app() {
         echo "$target is not installed."
     fi
 
+    if [[ $DO_PURGE -eq 1 && "$INSTALL_DIR" == "/Applications" ]]; then
+        /usr/bin/defaults delete app.lidward 2>/dev/null || true
+        /usr/bin/defaults delete dev.alouiadel.lidward 2>/dev/null || true
+        rm -f \
+            "$HOME/Library/Preferences/app.lidward.plist" \
+            "$HOME/Library/Preferences/dev.alouiadel.lidward.plist"
+        rm -rf \
+            "$HOME/Library/Saved Application State/app.lidward.savedState" \
+            "$HOME/Library/Saved Application State/dev.alouiadel.lidward.savedState"
+        echo "Removed preferences."
+    fi
+
     if [[ "$INSTALL_DIR" == "/Applications" ]] && \
        [[ -f /usr/local/libexec/lidward-helper || -f /etc/sudoers.d/lidward ]]; then
         echo
         echo "The closed-display helper is still installed."
 
-        if [[ -t 0 ]]; then
+        if [[ $DO_PURGE -eq 1 ]]; then
+            sudo /usr/bin/pmset -a disablesleep 0 || true
+            sudo /bin/rm -f \
+                /etc/sudoers.d/lidward \
+                /usr/local/libexec/lidward-helper \
+                /var/run/lidward-disablesleep.previous
+            echo "Closed-display helper removed."
+        elif [[ -t 0 ]]; then
             read -r -p "Remove the helper, sudoers rule, and restore sleep? [y/N] " answer
 
             if [[ "$answer" =~ ^[Yy]$ ]]; then
@@ -249,7 +275,12 @@ uninstall_app() {
         fi
     fi
 
-    echo "If Lidward still appears in Login Items, remove it in System Settings → General → Login Items."
+    if [[ $DO_PURGE -eq 1 ]]; then
+        echo "Purged Lidward."
+        echo "If an older Lidward login item remains, remove it in System Settings → General → Login Items."
+    else
+        echo "If Lidward still appears in Login Items, remove it in System Settings → General → Login Items."
+    fi
 }
 
 package_app() {
@@ -268,6 +299,24 @@ package_app() {
     cat "$CHECKSUM"
 }
 
+release_notes_file() {
+    local notes="$DIST_DIR/$APP_NAME-$VERSION-notes.md"
+
+    if [[ -f "$ROOT/CHANGELOG.md" ]]; then
+        /usr/bin/awk -v version="$VERSION" '
+            index($0, "## [" version "]") == 1 { capture=1; next }
+            capture && index($0, "## [") == 1 { exit }
+            capture { print }
+        ' "$ROOT/CHANGELOG.md" > "$notes"
+    fi
+
+    if [[ ! -s "$notes" ]]; then
+        echo "$APP_NAME $VERSION" > "$notes"
+    fi
+
+    printf '%s' "$notes"
+}
+
 publish_release() {
     if ! command -v gh >/dev/null 2>&1; then
         echo "gh is not installed." >&2
@@ -279,14 +328,18 @@ publish_release() {
         exit 1
     fi
 
+    local notes
+    notes="$(release_notes_file)"
+
     if gh release view "$TAG" >/dev/null 2>&1; then
-        echo "Release $TAG already exists; uploading assets..."
+        echo "Release $TAG already exists; updating notes and assets..."
+        gh release edit "$TAG" --notes-file "$notes"
         gh release upload "$TAG" "$ASSET" "$CHECKSUM" --clobber
     else
         echo "Creating release $TAG..."
         gh release create "$TAG" "$ASSET" "$CHECKSUM" \
             --title "$APP_NAME $VERSION" \
-            --generate-notes
+            --notes-file "$notes"
     fi
 
     gh release view "$TAG" --json url --jq .url

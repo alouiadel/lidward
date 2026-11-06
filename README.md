@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <img alt="Status" src="https://img.shields.io/badge/status-early%20development-F59E0B">
+  <img alt="Status" src="https://img.shields.io/badge/status-v0.2.0-22C55E">
   <img alt="Platform" src="https://img.shields.io/badge/platform-macOS%2013%2B-0B1220">
   <img alt="Language" src="https://img.shields.io/badge/language-Swift%20%2B%20AppKit-F05138">
   <img alt="License" src="https://img.shields.io/badge/license-MIT-22C55E">
@@ -18,6 +18,8 @@
 
 <p align="center">
   <a href="https://github.com/alouiadel/lidward/releases/latest"><strong>Download the latest release</strong></a>
+  ·
+  <a href="CHANGELOG.md">Changelog</a>
 </p>
 
 ---
@@ -79,6 +81,7 @@ Closed-display mode usually needs a separate helper or a manually installed scri
 - [x] Launch at login
 - [x] Install/uninstall build flags
 - [x] Sanitized GitHub Releases
+- [x] Changelog-driven release notes
 
 ## Build
 
@@ -88,6 +91,7 @@ Requirements: macOS 13+ and a Swift 5.9+ toolchain (Xcode or the Command Line To
 ./scripts/build-app.sh                 # build and open dist/Lidward.app
 ./scripts/build-app.sh --install       # build and install to /Applications
 ./scripts/build-app.sh --uninstall     # remove /Applications/Lidward.app
+./scripts/build-app.sh --purge         # remove app, preferences, login item, helper
 ./scripts/build-app.sh --package       # sanitized ZIP + SHA256 in dist/
 ./scripts/build-app.sh --release       # package and publish to GitHub Releases
 ```
@@ -107,6 +111,7 @@ Release builds are sanitized before they are zipped:
 - the build fails if the bundle contains `/Users/`, `/home/`, `adelaloui`, or `Adel Aloui`
 - zipped with `ditto --norsrc --noextattr --noacl`
 - the `.sha256` file contains only the asset filename, not the local path
+- release notes are extracted from `CHANGELOG.md` for the current version
 
 The app is ad-hoc signed, not notarized. On first launch, right-click → **Open**, or allow it in **System Settings → Privacy & Security**.
 

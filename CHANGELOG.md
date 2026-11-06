@@ -1,0 +1,26 @@
+# Changelog
+
+## [0.2.0] - 2026-11-07
+
+### Added
+
+- Monotonic elapsed-time tracking for the menu-bar session timer.
+- `--purge` uninstall option for preferences and login item.
+- Changelog-driven GitHub release notes.
+
+### Changed
+
+- Bundle identifier changed to `app.lidward`.
+- App copyright text no longer includes a personal name.
+- Release artifacts are sanitized before publishing.
+
+## [0.1.0] - 2026-11-06
+
+### Added
+
+- Menu-bar keep-awake sessions with native `IOPMAssertion` system and display sleep prevention.
+- Display-sleep controls, screen-lock timing, and lock-on-lid-close.
+- Integrated closed-display helper with a one-time admin setup.
+- Elapsed session time in the menu bar.
+- Preferences window, optional Dock icon, and Launch at Login.
+- Sanitized GitHub Releases with `--install`, `--uninstall`, `--package`, and `--release` build flags.
