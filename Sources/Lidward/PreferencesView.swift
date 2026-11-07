@@ -1,10 +1,16 @@
 import AppKit
 import SwiftUI
 
+final class UpdateCheckFeedback: ObservableObject {
+    @Published var message: String?
+    @Published var isError = false
+}
+
 struct PreferencesView: View {
     @ObservedObject var settings: AppSettings
     @ObservedObject var loginItem: LoginItemController
     @ObservedObject var updateChecker: UpdateChecker
+    @ObservedObject var feedback: UpdateCheckFeedback
     let uninstaller: UninstallController
 
     var body: some View {
@@ -51,7 +57,21 @@ struct PreferencesView: View {
 
                 HStack {
                     Button("Check Now") {
-                        updateChecker.check(force: true)
+                        feedback.message = nil
+                        feedback.isError = false
+
+                        updateChecker.check(force: true) { error in
+                            if let error {
+                                feedback.message = "Update check failed: \(error.localizedDescription)"
+                                feedback.isError = true
+                            } else if updateChecker.availableUpdate != nil {
+                                feedback.message = "A newer version is available."
+                                feedback.isError = false
+                            } else {
+                                feedback.message = "You're up to date."
+                                feedback.isError = false
+                            }
+                        }
                     }
                     .disabled(updateChecker.isChecking)
 
@@ -59,6 +79,12 @@ struct PreferencesView: View {
                         ProgressView()
                             .controlSize(.small)
                     }
+                }
+
+                if let message = feedback.message {
+                    Text(message)
+                        .font(.caption)
+                        .foregroundStyle(feedback.isError ? .red : .secondary)
                 }
 
                 if let update = updateChecker.availableUpdate {
@@ -75,7 +101,7 @@ struct PreferencesView: View {
                         .foregroundStyle(.secondary)
                 }
 
-                if let error = updateChecker.errorMessage {
+                if let error = updateChecker.errorMessage, feedback.message == nil {
                     Text(error)
                         .font(.caption)
                         .foregroundStyle(.red)

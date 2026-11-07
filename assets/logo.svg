@@ -1,87 +1,85 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" role="img" aria-label="Lidward logo">
   <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#070B14"/>
-      <stop offset="0.55" stop-color="#101A2E"/>
-      <stop offset="1" stop-color="#1B2A4A"/>
-    </linearGradient>
-
-    <linearGradient id="metal" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#FFFFFF"/>
-      <stop offset="0.55" stop-color="#E2E8F0"/>
-      <stop offset="1" stop-color="#A8B6C9"/>
-    </linearGradient>
-
-    <linearGradient id="screen" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#0B1220"/>
-      <stop offset="1" stop-color="#111C33"/>
-    </linearGradient>
-
-    <linearGradient id="amber" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#FDE68A"/>
-      <stop offset="0.45" stop-color="#FBBF24"/>
-      <stop offset="1" stop-color="#F59E0B"/>
-    </linearGradient>
-
-    <radialGradient id="glow" cx="50%" cy="50%" r="50%">
-      <stop offset="0" stop-color="#F59E0B" stop-opacity="0.38"/>
-      <stop offset="0.55" stop-color="#F59E0B" stop-opacity="0.10"/>
-      <stop offset="1" stop-color="#F59E0B" stop-opacity="0"/>
-    </radialGradient>
-
-    <filter id="blur" x="-50%" y="-50%" width="200%" height="200%">
-      <feGaussianBlur stdDeviation="26"/>
-    </filter>
-    <filter id="softShadow" x="-50%" y="-50%" width="200%" height="200%">
-      <feGaussianBlur stdDeviation="18"/>
-    </filter>
+    <pattern id="paper-dots" width="26" height="26" patternUnits="userSpaceOnUse">
+      <circle cx="4" cy="4" r="3" fill="#241C17" opacity="0.10"/>
+    </pattern>
+    <pattern id="scanlines" width="8" height="8" patternUnits="userSpaceOnUse">
+      <rect width="8" height="2" fill="#000000" opacity="0.20"/>
+    </pattern>
+    <clipPath id="tile">
+      <rect width="1024" height="1024" rx="220"/>
+    </clipPath>
   </defs>
 
-  <!-- App tile -->
-  <rect width="1024" height="1024" rx="224" fill="url(#bg)"/>
+  <!-- Warm paper tile -->
+  <rect width="1024" height="1024" rx="220" fill="#F2E7D0"/>
+  <g clip-path="url(#tile)">
+    <rect width="1024" height="1024" fill="url(#paper-dots)"/>
 
-  <!-- Ambient glow behind the mark -->
-  <circle cx="512" cy="430" r="360" fill="url(#glow)"/>
+    <!-- Retro sunburst -->
+    <circle cx="512" cy="500" r="330" fill="#E3A72F"/>
+    <g stroke="#D95D39" stroke-width="26" stroke-linecap="round">
+      <path d="M512 126 V216"/>
+      <path d="M306 196 L356 276"/>
+      <path d="M718 196 L668 276"/>
+      <path d="M186 386 H276"/>
+      <path d="M838 386 H748"/>
+    </g>
 
-  <!-- Subtle shield: the "ward" in Lidward -->
-  <path d="M512 108 L816 218 V482 C816 654 694 794 512 886 C330 794 208 654 208 482 V218 Z"
-        fill="#FFFFFF" fill-opacity="0.025"
-        stroke="#93C5FD" stroke-opacity="0.10" stroke-width="8"/>
+    <!-- Offset shadow -->
+    <rect x="286" y="238" width="480" height="520" rx="38" fill="#241C17" opacity="0.22"/>
 
-  <!-- Shadow under the laptop -->
-  <ellipse cx="512" cy="764" rx="300" ry="26" fill="#000000" opacity="0.45" filter="url(#softShadow)"/>
+    <!-- Classic beige computer -->
+    <rect x="272" y="220" width="480" height="520" rx="38" fill="#E8D3AC" stroke="#241C17" stroke-width="16"/>
 
-  <!-- Laptop base -->
-  <rect x="164" y="642" width="696" height="76" rx="38" fill="url(#metal)"/>
-  <rect x="164" y="694" width="696" height="24" rx="12" fill="#7C8CA3" opacity="0.45"/>
-  <rect x="452" y="670" width="120" height="11" rx="5.5" fill="#64748B" opacity="0.55"/>
+    <!-- Screen bezel -->
+    <rect x="312" y="260" width="400" height="300" rx="20" fill="#D8BE91" stroke="#241C17" stroke-width="12"/>
 
-  <!-- Lid / screen body -->
-  <rect x="220" y="192" width="584" height="448" rx="62" fill="url(#metal)"/>
-  <rect x="252" y="224" width="520" height="384" rx="38" fill="url(#screen)"/>
+    <!-- CRT screen -->
+    <rect x="340" y="288" width="344" height="244" rx="10" fill="#0E2A1D" stroke="#241C17" stroke-width="10"/>
 
-  <!-- Screen bezel highlight -->
-  <rect x="220" y="192" width="584" height="448" rx="62" fill="none" stroke="#FFFFFF" stroke-opacity="0.22" stroke-width="4"/>
-  <rect x="252" y="224" width="520" height="384" rx="38" fill="none" stroke="#FFFFFF" stroke-opacity="0.06" stroke-width="2"/>
+    <!-- Pixel eye -->
+    <g fill="#8CFF9E">
+      <rect x="430" y="372" width="164" height="16"/>
+      <rect x="400" y="388" width="224" height="16"/>
+      <rect x="384" y="404" width="256" height="16"/>
+      <rect x="400" y="420" width="224" height="16"/>
+      <rect x="430" y="436" width="164" height="16"/>
+    </g>
+    <rect x="488" y="388" width="48" height="48" fill="#0E2A1D"/>
+    <rect x="500" y="396" width="12" height="12" fill="#F2E7D0"/>
 
-  <!-- Camera dot -->
-  <circle cx="512" cy="208" r="6" fill="#0B1220" opacity="0.55"/>
+    <!-- CRT scanlines and glare -->
+    <rect x="340" y="288" width="344" height="244" rx="10" fill="url(#scanlines)"/>
+    <path d="M360 300 L420 300 L380 520 L320 520 Z" fill="#FFFFFF" opacity="0.06"/>
 
-  <!-- Hinge line -->
-  <rect x="296" y="620" width="432" height="14" rx="7" fill="#0B1220" opacity="0.35"/>
+    <!-- Floppy slot -->
+    <rect x="340" y="586" width="128" height="16" rx="8" fill="#241C17"/>
+    <rect x="348" y="590" width="40" height="8" rx="4" fill="#D95D39"/>
 
-  <!-- Awake eye -->
-  <ellipse cx="512" cy="414" rx="236" ry="126" fill="#F59E0B" opacity="0.20" filter="url(#blur)"/>
-  <path d="M512 300 C612 300 696 352 744 414 C696 476 612 528 512 528 C412 528 328 476 280 414 C328 352 412 300 512 300 Z"
-        fill="url(#amber)"/>
-  <circle cx="512" cy="414" r="58" fill="#0B1220"/>
-  <circle cx="533" cy="393" r="14" fill="#FEF3C7" opacity="0.95"/>
-  <circle cx="491" cy="435" r="6" fill="#FEF3C7" opacity="0.45"/>
+    <!-- Vents -->
+    <g fill="#241C17">
+      <rect x="600" y="588" width="80" height="10" rx="5"/>
+      <rect x="600" y="608" width="80" height="10" rx="5"/>
+      <rect x="600" y="628" width="80" height="10" rx="5"/>
+    </g>
 
-  <!-- Awake rays -->
-  <g stroke="#FBBF24" stroke-width="8" stroke-linecap="round" opacity="0.55">
-    <path d="M512 260 V238"/>
-    <path d="M410 274 L398 254"/>
-    <path d="M614 274 L626 254"/>
+    <!-- Retro stripe -->
+    <g>
+      <rect x="340" y="648" width="40" height="12" rx="6" fill="#D95D39"/>
+      <rect x="388" y="648" width="40" height="12" rx="6" fill="#E3A72F"/>
+      <rect x="436" y="648" width="40" height="12" rx="6" fill="#F2E7D0" stroke="#241C17" stroke-width="4"/>
+    </g>
+
+    <!-- Nameplate -->
+    <text x="602" y="662" text-anchor="middle" font-family="Menlo, ui-monospace, monospace" font-size="26" font-weight="700" letter-spacing="4" fill="#241C17">LIDWARD</text>
+
+    <!-- Base -->
+    <rect x="240" y="720" width="544" height="64" rx="30" fill="#D8BE91" stroke="#241C17" stroke-width="14"/>
+    <rect x="300" y="744" width="424" height="10" rx="5" fill="#241C17" opacity="0.35"/>
+    <rect x="700" y="742" width="16" height="16" rx="4" fill="#8CFF9E" stroke="#241C17" stroke-width="4"/>
   </g>
+
+  <!-- Sticker border -->
+  <rect x="10" y="10" width="1004" height="1004" rx="212" fill="none" stroke="#241C17" stroke-width="20"/>
 </svg>

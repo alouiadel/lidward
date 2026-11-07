@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.1] - 2026-11-07
+
+### Changed
+
+- New retro beige-computer, pixel-eye app icon and README logo.
+- Preferences now shows explicit inline feedback after **Check Now**: “You’re up to date,” “A newer version is available,” or the error.
+
 ## [0.3.0] - 2026-11-07
 
 ### Added
