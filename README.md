@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <img alt="Status" src="https://img.shields.io/badge/status-v0.3.1-22C55E">
+  <img alt="Status" src="https://img.shields.io/badge/status-v0.3.2-22C55E">
   <img alt="Platform" src="https://img.shields.io/badge/platform-macOS%2013%2B-0B1220">
   <img alt="Language" src="https://img.shields.io/badge/language-Swift%20%2B%20AppKit-F05138">
   <img alt="License" src="https://img.shields.io/badge/license-MIT-22C55E">
@@ -86,6 +86,10 @@ Closed-display mode usually needs a separate helper or a manually installed scri
 - [x] Daily GitHub release check + manual check
 - [x] In-app purge uninstall
 - [ ] Full auto-update (Sparkle) if the app gets users
+
+## Full-screen note
+
+macOS hides the menu bar in a full-screen space. Move the pointer to the top edge to reveal it, then click Lidward. Lidward now opens its menu through a direct pop-up so it does not activate the accessory app and collapse the menu bar.
 
 ## Updates
 

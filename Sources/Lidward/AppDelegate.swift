@@ -123,6 +123,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 self?.showPreferences()
             }
         }
+
+        if CommandLine.arguments.contains("--show-menu") {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
+                self?.statusItemController?.showMenuForTesting()
+            }
+        }
     }
 
     private func startSessionForTesting() {

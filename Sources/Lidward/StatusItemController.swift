@@ -7,6 +7,7 @@ final class StatusItemController: NSObject {
     private let updateChecker: UpdateChecker?
     private let showPreferences: (() -> Void)?
     private let statusItem: NSStatusItem
+    private let menu = NSMenu()
 
     private let sessionMenuItem = NSMenuItem(title: "", action: nil, keyEquivalent: "")
     private let stateMenuItem = NSMenuItem(title: "", action: nil, keyEquivalent: "")
@@ -58,7 +59,7 @@ final class StatusItemController: NSObject {
     }
 
     private func configureMenu() {
-        let menu = NSMenu()
+        menu.removeAllItems()
 
         sessionMenuItem.target = self
         sessionMenuItem.action = #selector(toggleSession)
@@ -139,8 +140,40 @@ final class StatusItemController: NSObject {
         quitItem.target = self
         menu.addItem(quitItem)
 
-        statusItem.menu = menu
+        // Show the menu ourselves instead of using statusItem.menu. The
+        // system-managed path can activate the accessory app, which makes
+        // macOS hide the menu bar while another app is full screen.
+        statusItem.menu = nil
+
+        if let button = statusItem.button {
+            button.target = self
+            button.action = #selector(showStatusMenu)
+            button.sendAction(on: [.leftMouseUp, .rightMouseUp])
+        }
     }
+
+    @objc private func showStatusMenu() {
+        guard let button = statusItem.button,
+              let window = button.window else { return }
+
+        let buttonRectInWindow = button.convert(button.bounds, to: nil)
+        let buttonRectOnScreen = window.convertToScreen(buttonRectInWindow)
+
+        menu.popUp(
+            positioning: sessionMenuItem,
+            at: NSPoint(
+                x: buttonRectOnScreen.minX,
+                y: buttonRectOnScreen.minY - 4
+            ),
+            in: nil
+        )
+    }
+
+    #if DEBUG
+    func showMenuForTesting() {
+        showStatusMenu()
+    }
+    #endif
 
     private func observeChanges() {
         let center = NotificationCenter.default

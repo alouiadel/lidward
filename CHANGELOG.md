@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.3.2] - 2026-11-07
+
+### Fixed
+
+- The menu bar menu now opens through a direct `NSMenu` pop-up instead of the system-managed status-item menu. This avoids the macOS accessory-app activation path that can make the menu bar disappear while another app is full screen.
+
 ## [0.3.1] - 2026-11-07
 
 ### Changed
