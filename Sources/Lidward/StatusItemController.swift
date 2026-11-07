@@ -22,6 +22,7 @@ final class StatusItemController: NSObject {
     private let inactivitySubmenu = NSMenu(title: "Lock Screen After Inactivity")
 
     private var observers: [NSObjectProtocol] = []
+    private var spaceObserver: NSObjectProtocol?
     private var sessionTimer: Timer?
 
     init(
@@ -140,16 +141,68 @@ final class StatusItemController: NSObject {
         quitItem.target = self
         menu.addItem(quitItem)
 
-        // Show the menu ourselves instead of using statusItem.menu. The
-        // system-managed path can activate the accessory app, which makes
-        // macOS hide the menu bar while another app is full screen.
-        statusItem.menu = nil
+        updateMenuMode()
+    }
 
-        if let button = statusItem.button {
-            button.target = self
-            button.action = #selector(showStatusMenu)
-            button.sendAction(on: [.leftMouseUp, .rightMouseUp])
+    /// In a normal space, let AppKit position the status menu natively. In a
+    /// full-screen space, use a direct pop-up because activating the accessory
+    /// app can make macOS hide the menu bar (FB13544993).
+    private func updateMenuMode() {
+        if isFullscreenSpace() {
+            statusItem.menu = nil
+
+            if let button = statusItem.button {
+                button.target = self
+                button.action = #selector(showStatusMenu)
+                button.sendAction(on: [.leftMouseUp, .rightMouseUp])
+            }
+        } else {
+            statusItem.menu = menu
+            statusItem.button?.target = nil
+            statusItem.button?.action = nil
         }
+    }
+
+    private func isFullscreenSpace() -> Bool {
+        let screen = NSScreen.main ?? NSScreen.screens.first
+        let displayID = screen?.deviceDescription[
+            NSDeviceDescriptionKey("NSScreenNumber")
+        ] as? CGDirectDisplayID ?? CGMainDisplayID()
+        let displayBounds = CGDisplayBounds(displayID)
+
+        guard let windows = CGWindowListCopyWindowInfo(
+            [.optionOnScreenOnly, .excludeDesktopElements],
+            kCGNullWindowID
+        ) as? [[String: Any]] else {
+            return false
+        }
+
+        let ownPID = getpid()
+
+        for window in windows {
+            let layer = window[kCGWindowLayer as String] as? Int ?? 0
+            guard layer == 0 else { continue }
+
+            let ownerPID = window[kCGWindowOwnerPID as String] as? pid_t ?? 0
+            guard ownerPID != ownPID else { continue }
+
+            guard let bounds = window[kCGWindowBounds as String] as? [String: Any],
+                  let x = (bounds["X"] as? NSNumber)?.doubleValue,
+                  let y = (bounds["Y"] as? NSNumber)?.doubleValue,
+                  let width = (bounds["Width"] as? NSNumber)?.doubleValue,
+                  let height = (bounds["Height"] as? NSNumber)?.doubleValue else {
+                continue
+            }
+
+            let rect = CGRect(x: x, y: y, width: width, height: height)
+
+            if rect.width >= displayBounds.width - 1,
+               rect.height >= displayBounds.height - 1 {
+                return true
+            }
+        }
+
+        return false
     }
 
     @objc private func showStatusMenu() {
@@ -209,6 +262,14 @@ final class StatusItemController: NSObject {
         ) { [weak self] _ in
             self?.refreshMenu()
         })
+
+        spaceObserver = NSWorkspace.shared.notificationCenter.addObserver(
+            forName: NSWorkspace.activeSpaceDidChangeNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            self?.updateMenuMode()
+        }
     }
 
     private func refreshMenu() {
@@ -429,6 +490,10 @@ final class StatusItemController: NSObject {
 
     deinit {
         sessionTimer?.invalidate()
+
+        if let spaceObserver {
+            NSWorkspace.shared.notificationCenter.removeObserver(spaceObserver)
+        }
 
         for observer in observers {
             NotificationCenter.default.removeObserver(observer)

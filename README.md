@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <img alt="Status" src="https://img.shields.io/badge/status-v0.3.2-22C55E">
+  <img alt="Status" src="https://img.shields.io/badge/status-v0.3.3-22C55E">
   <img alt="Platform" src="https://img.shields.io/badge/platform-macOS%2013%2B-0B1220">
   <img alt="Language" src="https://img.shields.io/badge/language-Swift%20%2B%20AppKit-F05138">
   <img alt="License" src="https://img.shields.io/badge/license-MIT-22C55E">

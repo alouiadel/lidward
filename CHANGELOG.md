@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.3.3] - 2026-11-07
+
+### Fixed
+
+- The status menu now uses the native AppKit menu positioning in normal spaces, so it attaches directly below the menu bar again. The direct pop-up path is kept only for full-screen spaces, where it avoids the accessory-app activation bug.
+
 ## [0.3.2] - 2026-11-07
 
 ### Fixed
