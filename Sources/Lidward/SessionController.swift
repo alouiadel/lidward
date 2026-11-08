@@ -23,6 +23,7 @@ final class SessionController {
     private(set) var isActive = false
     private(set) var isScreenLocked = false
     private(set) var startedAt: ContinuousClock.Instant?
+    private(set) var scheduledDuration: TimeInterval?
 
     /// Monotonic elapsed time for the current session.
     var elapsedTime: TimeInterval? {
@@ -35,8 +36,15 @@ final class SessionController {
             + TimeInterval(components.attoseconds) / 1_000_000_000_000_000_000
     }
 
+    /// Remaining time for a timed session, or `nil` for an indefinite one.
+    var remainingTime: TimeInterval? {
+        guard let scheduledDuration, let elapsedTime else { return nil }
+        return max(0, scheduledDuration - elapsedTime)
+    }
+
     private var systemAssertionID: IOPMAssertionID = 0
     private var displayAssertionID: IOPMAssertionID = 0
+    private var autoStopTimer: Timer?
     private var settingsObserver: NSObjectProtocol?
 
     var onError: ((Error) -> Void)?
@@ -53,7 +61,7 @@ final class SessionController {
         }
     }
 
-    func start() throws {
+    func start(duration: SessionDuration = .indefinite) throws {
         guard !isActive else { return }
 
         var systemID: IOPMAssertionID = 0
@@ -82,12 +90,17 @@ final class SessionController {
         }
 
         startedAt = ContinuousClock.now
+        scheduledDuration = duration.seconds
+        scheduleAutoStop(after: scheduledDuration)
         notifySessionChanged()
     }
 
     func stop() {
         guard isActive else { return }
 
+        autoStopTimer?.invalidate()
+        autoStopTimer = nil
+        scheduledDuration = nil
         releaseAssertions()
         isActive = false
         startedAt = nil
@@ -137,6 +150,19 @@ final class SessionController {
         }
     }
 
+    private func scheduleAutoStop(after duration: TimeInterval?) {
+        autoStopTimer?.invalidate()
+        autoStopTimer = nil
+
+        guard let duration, duration > 0 else { return }
+
+        let timer = Timer(timeInterval: duration, repeats: false) { [weak self] _ in
+            self?.stop()
+        }
+        RunLoop.main.add(timer, forMode: .common)
+        autoStopTimer = timer
+    }
+
     private func releaseAssertions() {
         if systemAssertionID != 0 {
             IOPMAssertionRelease(systemAssertionID)
@@ -154,6 +180,8 @@ final class SessionController {
     }
 
     deinit {
+        autoStopTimer?.invalidate()
+
         if let settingsObserver {
             NotificationCenter.default.removeObserver(settingsObserver)
         }

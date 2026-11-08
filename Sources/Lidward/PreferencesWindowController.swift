@@ -23,9 +23,12 @@ final class PreferencesWindowController: NSWindowController {
         let hostingController = NSHostingController(rootView: rootView)
 
         let window = NSWindow(contentViewController: hostingController)
-        window.title = "Lidward Preferences"
+        window.title = "Lidward"
         window.styleMask = [.titled, .closable, .miniaturizable]
-        window.setContentSize(NSSize(width: 460, height: 520))
+        window.titlebarAppearsTransparent = true
+        window.titleVisibility = .hidden
+        window.backgroundColor = .windowBackgroundColor
+        window.setContentSize(NSSize(width: 520, height: 680))
         window.center()
         window.isReleasedWhenClosed = false
 

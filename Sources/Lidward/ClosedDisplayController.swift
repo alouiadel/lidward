@@ -119,6 +119,7 @@ final class ClosedDisplayController {
         It installs a small root-owned helper and a sudoers rule that allows only two commands: enabling and disabling lid-close sleep. macOS will ask for your administrator password once. After that, toggling closed-display mode does not ask for a password.
         """
         alert.alertStyle = .informational
+        alert.icon = NSApp.applicationIconImage
         alert.addButton(withTitle: "Continue")
         alert.addButton(withTitle: "Cancel")
 

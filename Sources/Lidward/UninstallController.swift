@@ -20,6 +20,7 @@ final class UninstallController {
         This cannot be undone.
         """
         alert.alertStyle = .warning
+        alert.icon = NSApp.applicationIconImage
         alert.addButton(withTitle: "Uninstall")
         alert.addButton(withTitle: "Cancel")
 
@@ -70,6 +71,7 @@ final class UninstallController {
             let alert = NSAlert()
             alert.messageText = "Eject the Lidward disk image"
             alert.informativeText = "Lidward removed its preferences and helper. Eject the disk image and move Lidward to the Trash."
+            alert.icon = NSApp.applicationIconImage
             alert.addButton(withTitle: "Quit Lidward")
             NSApp.activate(ignoringOtherApps: true)
             alert.runModal()
@@ -125,6 +127,7 @@ final class UninstallController {
         alert.messageText = "Lidward could not uninstall completely"
         alert.informativeText = error.localizedDescription
         alert.alertStyle = .warning
+        alert.icon = NSApp.applicationIconImage
         alert.addButton(withTitle: "OK")
 
         NSApp.activate(ignoringOtherApps: true)

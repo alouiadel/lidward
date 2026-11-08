@@ -10,6 +10,8 @@ final class StatusItemController: NSObject {
     private let menu = NSMenu()
 
     private let sessionMenuItem = NSMenuItem(title: "", action: nil, keyEquivalent: "")
+    private let startForItem = NSMenuItem(title: "Start For", action: nil, keyEquivalent: "")
+    private let durationSubmenu = NSMenu(title: "Start For")
     private let stateMenuItem = NSMenuItem(title: "", action: nil, keyEquivalent: "")
     private let preventDisplaySleepItem = NSMenuItem(title: "Prevent Display Sleep", action: nil, keyEquivalent: "")
     private let allowDisplaySleepWhenLockedItem = NSMenuItem(title: "Allow Display Sleep When Locked", action: nil, keyEquivalent: "")
@@ -66,6 +68,23 @@ final class StatusItemController: NSObject {
         sessionMenuItem.action = #selector(toggleSession)
         menu.addItem(sessionMenuItem)
 
+        startForItem.image = symbol("timer")
+        startForItem.toolTip = "Start a session with a specific length."
+        startForItem.submenu = durationSubmenu
+
+        for duration in SessionDuration.allCases {
+            let item = NSMenuItem(
+                title: duration.label,
+                action: #selector(startForDuration(_:)),
+                keyEquivalent: ""
+            )
+            item.target = self
+            item.tag = duration.minutes
+            durationSubmenu.addItem(item)
+        }
+
+        menu.addItem(startForItem)
+
         menu.addItem(.separator())
 
         stateMenuItem.isEnabled = false
@@ -73,20 +92,20 @@ final class StatusItemController: NSObject {
 
         menu.addItem(.separator())
 
-        let controlsItem = NSMenuItem(title: "Session Controls", action: nil, keyEquivalent: "")
-        let controlsMenu = NSMenu(title: "Session Controls")
-
         preventDisplaySleepItem.target = self
         preventDisplaySleepItem.action = #selector(togglePreventDisplaySleep)
-        controlsMenu.addItem(preventDisplaySleepItem)
+        preventDisplaySleepItem.image = symbol("display")
+        preventDisplaySleepItem.toolTip = "Keep the display awake while a session is active."
+        menu.addItem(preventDisplaySleepItem)
 
         allowDisplaySleepWhenLockedItem.target = self
         allowDisplaySleepWhenLockedItem.action = #selector(toggleAllowDisplaySleepWhenLocked)
-        controlsMenu.addItem(allowDisplaySleepWhenLockedItem)
-
-        controlsMenu.addItem(.separator())
+        allowDisplaySleepWhenLockedItem.image = symbol("lock")
+        allowDisplaySleepWhenLockedItem.toolTip = "Let the display sleep when the screen is locked."
+        menu.addItem(allowDisplaySleepWhenLockedItem)
 
         let inactivityItem = NSMenuItem(title: "Lock Screen After Inactivity", action: nil, keyEquivalent: "")
+        inactivityItem.image = symbol("clock")
         inactivityItem.submenu = inactivitySubmenu
 
         for minutes in [0, 1, 2, 5, 10, 15, 30] {
@@ -100,35 +119,39 @@ final class StatusItemController: NSObject {
             inactivitySubmenu.addItem(item)
         }
 
-        controlsMenu.addItem(inactivityItem)
+        menu.addItem(inactivityItem)
 
         lockScreenOnLidCloseItem.target = self
         lockScreenOnLidCloseItem.action = #selector(toggleLockOnLidClose)
-        controlsMenu.addItem(lockScreenOnLidCloseItem)
+        lockScreenOnLidCloseItem.image = symbol("lock.fill")
+        lockScreenOnLidCloseItem.toolTip = "Lock the screen as soon as the lid closes."
+        menu.addItem(lockScreenOnLidCloseItem)
 
-        controlsMenu.addItem(.separator())
+        menu.addItem(.separator())
 
         closedDisplayModeItem.target = self
         closedDisplayModeItem.action = #selector(toggleClosedDisplayMode)
-        controlsMenu.addItem(closedDisplayModeItem)
+        closedDisplayModeItem.image = symbol("laptopcomputer")
+        closedDisplayModeItem.toolTip = "Keep your Mac awake with the lid closed. Requires a one-time administrator setup."
+        menu.addItem(closedDisplayModeItem)
 
-        controlsMenu.addItem(helperSeparatorItem)
+        menu.addItem(helperSeparatorItem)
 
         uninstallHelperItem.target = self
         uninstallHelperItem.action = #selector(uninstallHelper)
-        controlsMenu.addItem(uninstallHelperItem)
-
-        controlsItem.submenu = controlsMenu
-        menu.addItem(controlsItem)
+        uninstallHelperItem.image = symbol("trash")
+        menu.addItem(uninstallHelperItem)
 
         menu.addItem(.separator())
 
         updateMenuItem.target = self
         updateMenuItem.action = #selector(handleUpdateMenu)
+        updateMenuItem.image = symbol("arrow.triangle.2.circlepath")
         menu.addItem(updateMenuItem)
 
         preferencesItem.target = self
         preferencesItem.action = #selector(openPreferences)
+        preferencesItem.image = symbol("gearshape")
         menu.addItem(preferencesItem)
 
         menu.addItem(.separator())
@@ -139,9 +162,16 @@ final class StatusItemController: NSObject {
             keyEquivalent: "q"
         )
         quitItem.target = self
+        quitItem.image = symbol("power")
         menu.addItem(quitItem)
 
         updateMenuMode()
+    }
+
+    private func symbol(_ name: String) -> NSImage? {
+        let image = NSImage(systemSymbolName: name, accessibilityDescription: nil)
+        image?.isTemplate = true
+        return image
     }
 
     /// In a normal space, let AppKit position the status menu natively. In a
@@ -274,20 +304,29 @@ final class StatusItemController: NSObject {
 
     private func refreshMenu() {
         let isActive = session.isActive
-        let symbolName = isActive ? "eye.fill" : "eye.slash"
         let description = isActive ? "Session active" : "Session inactive"
 
-        let image = NSImage(
-            systemSymbolName: symbolName,
-            accessibilityDescription: description
-        )
-        image?.isTemplate = true
-
-        statusItem.button?.image = image
+        statusItem.button?.image = MenuBarGlyph.image(active: isActive)
         statusItem.button?.toolTip = description
+        statusItem.button?.setAccessibilityLabel("Lidward, \(description)")
 
         sessionMenuItem.title = isActive ? "Stop Session" : "Start Session"
-        stateMenuItem.title = isActive ? "Session: Active" : "Session: Inactive"
+        sessionMenuItem.image = symbol(isActive ? "stop.fill" : "play.fill")
+        sessionMenuItem.toolTip = isActive
+            ? "Stop the current keep-awake session."
+            : "Start a session using the selected length."
+        startForItem.isHidden = isActive
+
+        let selectedDuration = SessionDuration(minutes: settings.sessionDurationMinutes) ?? .indefinite
+        if !isActive, !selectedDuration.isIndefinite {
+            sessionMenuItem.title = "Start Session · \(selectedDuration.shortLabel)"
+        }
+
+        for item in durationSubmenu.items {
+            item.state = item.tag == settings.sessionDurationMinutes ? .on : .off
+        }
+
+        updateStateItemTitle()
 
         preventDisplaySleepItem.state = settings.displaySleepAllowed ? .off : .on
         allowDisplaySleepWhenLockedItem.state = settings.allowDisplaySleepWhenLocked ? .on : .off
@@ -332,7 +371,9 @@ final class StatusItemController: NSObject {
     }
 
     private func updateSessionTimer() {
-        let shouldRun = session.isActive && settings.showSessionTimeInMenuBar
+        // Keep running while a session is active even if the menu-bar timer is
+        // hidden, so the menu's status line always shows a current elapsed time.
+        let shouldRun = session.isActive
 
         if shouldRun {
             updateSessionTitle()
@@ -354,24 +395,72 @@ final class StatusItemController: NSObject {
     private func updateSessionTitle() {
         guard session.isActive,
               settings.showSessionTimeInMenuBar,
-              let elapsedTime = session.elapsedTime else {
+              let time = currentSessionTime() else {
             statusItem.button?.title = ""
+            updateStateItemTitle()
             return
         }
 
+        statusItem.button?.title = " " + time.text
+        statusItem.button?.toolTip = time.isRemaining
+            ? "Lidward — session active · \(time.text) remaining"
+            : "Lidward — session active · \(time.text) elapsed"
+        updateStateItemTitle()
+    }
+
+    private func currentSessionTime() -> (text: String, isRemaining: Bool)? {
+        if let remaining = session.remainingTime {
+            return (formattedElapsed(remaining), true)
+        }
+
+        if let elapsed = session.elapsedTime {
+            return (formattedElapsed(elapsed), false)
+        }
+
+        return nil
+    }
+
+    private func updateStateItemTitle() {
+        let isActive = session.isActive
+        let status: String
+
+        if isActive, let time = currentSessionTime() {
+            let suffix = time.isRemaining ? " left" : ""
+            status = "Session active  ·  \(time.text)\(suffix)"
+        } else {
+            status = isActive ? "Session active" : "Session inactive"
+        }
+
+        let title = NSMutableAttributedString(
+            string: "● ",
+            attributes: [
+                .foregroundColor: isActive ? NSColor.systemGreen : NSColor.tertiaryLabelColor,
+                .font: NSFont.systemFont(ofSize: 9)
+            ]
+        )
+
+        title.append(NSAttributedString(
+            string: status,
+            attributes: [
+                .foregroundColor: NSColor.secondaryLabelColor,
+                .font: NSFont.systemFont(ofSize: 12, weight: .medium)
+            ]
+        ))
+
+        stateMenuItem.attributedTitle = title
+    }
+
+    private func formattedElapsed(_ elapsedTime: TimeInterval) -> String {
         let elapsed = max(0, Int(elapsedTime))
         let hours = elapsed / 3600
         let minutes = (elapsed % 3600) / 60
         let seconds = elapsed % 60
 
-        let text: String
         if hours > 0 {
-            text = String(format: "%d:%02d:%02d", hours, minutes, seconds)
-        } else {
-            text = String(format: "%d:%02d", minutes, seconds)
+            return String(format: "%d:%02d:%02d", hours, minutes, seconds)
         }
 
-        statusItem.button?.title = " " + text
+        return String(format: "%d:%02d", minutes, seconds)
     }
 
     private func inactivityTitle(_ minutes: Int) -> String {
@@ -389,11 +478,26 @@ final class StatusItemController: NSObject {
         if session.isActive {
             session.stop()
         } else {
+            let duration = SessionDuration(minutes: settings.sessionDurationMinutes) ?? .indefinite
+
             do {
-                try session.start()
+                try session.start(duration: duration)
             } catch {
                 presentError(error)
             }
+        }
+    }
+
+    @objc private func startForDuration(_ sender: NSMenuItem) {
+        guard !session.isActive else { return }
+
+        let duration = SessionDuration(minutes: sender.tag) ?? .indefinite
+        settings.sessionDurationMinutes = duration.minutes
+
+        do {
+            try session.start(duration: duration)
+        } catch {
+            presentError(error)
         }
     }
 
@@ -430,6 +534,7 @@ final class StatusItemController: NSObject {
         alert.messageText = "Lidward could not complete that action"
         alert.informativeText = error.localizedDescription
         alert.alertStyle = .warning
+        alert.icon = NSApp.applicationIconImage
         alert.addButton(withTitle: "OK")
 
         NSApp.activate(ignoringOtherApps: true)
@@ -460,6 +565,7 @@ final class StatusItemController: NSObject {
                 let alert = NSAlert()
                 alert.messageText = "Lidward \(update.version) is available"
                 alert.informativeText = "Open the GitHub release page to download it."
+                alert.icon = NSApp.applicationIconImage
                 alert.addButton(withTitle: "Download")
                 alert.addButton(withTitle: "Later")
 
@@ -471,6 +577,7 @@ final class StatusItemController: NSObject {
                 let alert = NSAlert()
                 alert.messageText = "Lidward is up to date"
                 alert.informativeText = "You are running the latest version."
+                alert.icon = NSApp.applicationIconImage
                 alert.addButton(withTitle: "OK")
 
                 NSApp.activate(ignoringOtherApps: true)

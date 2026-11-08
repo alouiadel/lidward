@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <img alt="Status" src="https://img.shields.io/badge/status-v0.3.3-22C55E">
+  <img alt="Status" src="https://img.shields.io/badge/status-v0.4.0-22C55E">
   <img alt="Platform" src="https://img.shields.io/badge/platform-macOS%2013%2B-0B1220">
   <img alt="Language" src="https://img.shields.io/badge/language-Swift%20%2B%20AppKit-F05138">
   <img alt="License" src="https://img.shields.io/badge/license-MIT-22C55E">
@@ -20,6 +20,10 @@
   <a href="https://github.com/alouiadel/lidward/releases/latest"><strong>Download the latest release</strong></a>
   ·
   <a href="CHANGELOG.md">Changelog</a>
+</p>
+
+<p align="center">
+  <img src="assets/demo.png" alt="Lidward demo: opening the menu-bar menu, starting a 30-minute session, and watching the countdown" width="520">
 </p>
 
 ---
@@ -37,13 +41,14 @@ Most keep-awake apps carry years of features you never touch. Lidward keeps the 
 ### Session
 
 - Menu-bar icon to start and stop a session
-- **Indefinite** sessions for now (more session types may come later)
+- **Indefinite or timed sessions** — choose 15 minutes, 30 minutes, 1 hour, 2 hours, 4 hours, or 8 hours
+- Timed sessions stop automatically and show a live countdown
 - Holds native macOS power assertions while active
-- **Elapsed session time** in the menu bar
+- **Session time** in the menu bar — elapsed for indefinite sessions, remaining for timed sessions
 - **Optional Dock icon** — hidden by default
 - **Launch at login** (best when the app is in `/Applications`)
 - **In-app purge uninstall** from Preferences
-- Preferences window for menu-bar, Dock, startup, updates, and uninstall options
+- **Preferences window** with session-length, menu-bar, Dock, startup, updates, and uninstall options
 
 ### Per-session controls
 
@@ -73,7 +78,7 @@ Closed-display mode usually needs a separate helper or a manually installed scri
 - [x] Name, logo, license, README
 - [x] App icon
 - [x] Swift package + menu-bar shell
-- [x] Indefinite session with power assertions
+- [x] Indefinite and timed sessions with power assertions
 - [x] Display sleep and lock-screen controls
 - [x] Integrated closed-display helper
 - [x] Session status/time in the menu bar
@@ -113,6 +118,8 @@ Requirements: macOS 13+ and a Swift 5.9+ toolchain (Xcode or the Command Line To
 ```
 
 Add `--no-open` when you do not want the app launched after building or installing.
+
+The README demo is generated from the real Preferences UI with `./scripts/render-demo.sh` (requires `ffmpeg`).
 
 The app icon is generated from `assets/logo.svg` with `scripts/make-icon.sh` and bundled as `AppIcon.icns`; the build script regenerates it if it is missing.
 

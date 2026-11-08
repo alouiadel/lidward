@@ -1,5 +1,22 @@
 # Changelog
 
+## [0.4.0] - 2026-11-08
+
+### Added
+
+- Custom pixel-eye menu-bar glyph derived from the app icon; the pupil fills while a session is active.
+- Timed sessions from 15 minutes to 8 hours, with automatic stop and a live remaining-time countdown.
+- **Start For** menu submenu for starting a one-off length, plus a default session-length setting in Preferences.
+- Menu-bar-focused animated demo in the README.
+
+### Changed
+
+- Redesigned Preferences with a branded header, grouped settings cards, and clearer descriptions in both light and dark mode.
+- Preferences is now settings-only; starting and stopping a session happens from the menu bar.
+- Session controls now appear directly in the menu with icons and a live status line instead of being hidden in a submenu.
+- The menu bar shows remaining time for timed sessions and elapsed time for indefinite sessions, even when the menu-bar timer is hidden.
+- Alerts now use the Lidward app icon.
+
 ## [0.3.3] - 2026-11-07
 
 ### Fixed

@@ -132,8 +132,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func startSessionForTesting() {
+        let duration = SessionDuration(minutes: settings.sessionDurationMinutes) ?? .indefinite
+
         do {
-            try session.start()
+            try session.start(duration: duration)
         } catch {
             NSLog("Lidward: failed to start test session: \(error.localizedDescription)")
         }

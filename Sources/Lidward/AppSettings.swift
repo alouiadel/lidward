@@ -8,6 +8,7 @@ final class AppSettings: ObservableObject {
         static let lockScreenAfterInactivity = "lockScreenAfterInactivity"
         static let lockScreenOnLidClose = "lockScreenOnLidClose"
         static let closedDisplayModeEnabled = "closedDisplayModeEnabled"
+        static let sessionDurationMinutes = "sessionDurationMinutes"
         static let showSessionTimeInMenuBar = "showSessionTimeInMenuBar"
         static let hideInDock = "hideInDock"
         static let automaticallyCheckForUpdates = "automaticallyCheckForUpdates"
@@ -15,6 +16,13 @@ final class AppSettings: ObservableObject {
     }
 
     private let defaults: UserDefaults
+
+    /// Default length for the next session. Zero means indefinite.
+    @Published var sessionDurationMinutes: Int {
+        didSet {
+            persist(sessionDurationMinutes, oldValue: oldValue, key: Keys.sessionDurationMinutes)
+        }
+    }
 
     /// When true, the session does not hold a display-sleep assertion.
     @Published var displaySleepAllowed: Bool {
@@ -90,6 +98,8 @@ final class AppSettings: ObservableObject {
         self.lockScreenAfterInactivity = max(0, defaults.integer(forKey: Keys.lockScreenAfterInactivity))
         self.lockScreenOnLidClose = defaults.bool(forKey: Keys.lockScreenOnLidClose)
         self.closedDisplayModeEnabled = defaults.bool(forKey: Keys.closedDisplayModeEnabled)
+        let storedDuration = defaults.object(forKey: Keys.sessionDurationMinutes) as? Int ?? 0
+        self.sessionDurationMinutes = SessionDuration(rawValue: storedDuration)?.minutes ?? 0
         self.showSessionTimeInMenuBar = defaults.object(forKey: Keys.showSessionTimeInMenuBar) as? Bool ?? true
         self.hideInDock = defaults.object(forKey: Keys.hideInDock) as? Bool ?? true
         self.automaticallyCheckForUpdates = defaults.object(forKey: Keys.automaticallyCheckForUpdates) as? Bool ?? true
