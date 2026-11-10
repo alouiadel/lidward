@@ -66,6 +66,29 @@ final class ClosedDisplayController {
     func shutdown() {
         isShuttingDown = true
         stop()
+
+        // Give the helper a moment to restore sleep before the app exits, so
+        // quitting leaves the machine in a normal sleep state immediately
+        // instead of relying on the helper finishing after Lidward is gone.
+        if let process {
+            let deadline = Date().addingTimeInterval(2)
+
+            while process.isRunning, Date() < deadline {
+                usleep(20_000)
+            }
+
+            // Still running: it will restore when the pipe closes as Lidward
+            // exits. Do not race it with a second restore.
+            if process.isRunning {
+                return
+            }
+        }
+
+        // If the helper died before it could restore, its state file is still
+        // there. Retry through the installed helper.
+        if FileManager.default.fileExists(atPath: HelperInstaller.statePath) {
+            installer.restoreIfNeeded()
+        }
     }
 
     func uninstallHelper() throws {

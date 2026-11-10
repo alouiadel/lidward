@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <img alt="Status" src="https://img.shields.io/badge/status-v0.4.0-22C55E">
+  <img alt="Status" src="https://img.shields.io/badge/status-v0.4.1-22C55E">
   <img alt="Platform" src="https://img.shields.io/badge/platform-macOS%2013%2B-0B1220">
   <img alt="Language" src="https://img.shields.io/badge/language-Swift%20%2B%20AppKit-F05138">
   <img alt="License" src="https://img.shields.io/badge/license-MIT-22C55E">
@@ -66,6 +66,7 @@ Closed-display mode usually needs a separate helper or a manually installed scri
 - The helper is the executable that performs the toggle. The sudoers rule is the permission that lets that one helper run as root without a password each time. They are two pieces because the app itself must not run as root.
 - After that, toggling closed-display mode does not ask for a password.
 - The helper watches Lidward through a pipe. If Lidward quits or crashes, the pipe closes and the helper restores the previous sleep setting.
+- Lidward also checks at launch and restores normal sleep if a previous run left the setting disabled without its helper state (for example after a reboot, logout, or forced quit). Quitting waits for the restore to finish.
 - It re-applies the setting if macOS resets it after a power-source change.
 - No script to download, no sudoers file to edit by hand, no kernel extension, no SIP changes.
 - **Remove Closed-Display Helper…** appears in the menu only when the helper is installed, and removes both pieces.

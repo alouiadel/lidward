@@ -104,11 +104,17 @@ final class HelperInstaller {
         try runAdminScript(script)
     }
 
-    /// If a previous Lidward instance crashed after enabling closed-display
-    /// mode, the state file survives. Restore sleep before doing anything else.
+    /// Put sleep back to its normal state before doing anything else.
+    ///
+    /// This runs even when the helper's state file is missing. A crash,
+    /// forced quit, logout, or reboot can lose that file (it lives in the
+    /// volatile `/var/run`) while `pmset disablesleep` stays enabled. Without
+    /// this check, the stale `1` would be recorded as the "previous" state on
+    /// the next session and Lidward would keep restoring it, so quitting
+    /// would never enable sleep again. With no state file, the helper
+    /// restores normal sleep (0).
     func restoreIfNeeded() {
-        guard isInstalled,
-              FileManager.default.fileExists(atPath: Self.statePath) else {
+        guard isInstalled else {
             return
         }
 
@@ -118,8 +124,13 @@ final class HelperInstaller {
         process.standardOutput = FileHandle.nullDevice
         process.standardError = FileHandle.nullDevice
 
-        try? process.run()
-        process.waitUntilExit()
+        do {
+            try process.run()
+            process.waitUntilExit()
+        } catch {
+            // The helper is installed but cannot be launched (for example,
+            // because the sudoers rule was removed). Do not block startup.
+        }
     }
 
     private func bundledHelperURL() -> URL? {

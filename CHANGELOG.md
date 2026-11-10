@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.1] - 2026-11-10
+
+### Fixed
+
+- Lidward now restores normal sleep on launch when a previous run left `pmset disablesleep` enabled without its helper state file, for example after a crash, forced quit, logout, or reboot. Previously the stale `1` was recorded as the “previous” state, so quitting kept restoring it and sleep stayed disabled.
+- Quitting now waits briefly for the closed-display helper to finish restoring sleep before the app exits, and retries the restore if the helper stopped without cleaning up.
+
 ## [0.4.0] - 2026-11-08
 
 ### Added
